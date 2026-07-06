@@ -15,17 +15,14 @@ import {
   type Cubic,
 } from "../src/index.ts";
 
-const qb = bernstein2;
-const cbz = bernstein3;
-
 test("fitQuad recovers a known control point exactly", () => {
   const Q: Quad = [0.7, 0.2];
   const xs: number[] = [];
   const ys: number[] = [];
   for (let i = 0; i <= 12; i++) {
     const t = i / 12;
-    xs.push(qb(t, Q[0]));
-    ys.push(qb(t, Q[1]));
+    xs.push(bernstein2(t, Q[0]));
+    ys.push(bernstein2(t, Q[1]));
   }
   const [px, py] = fitQuad(xs, ys);
   assert.ok(Math.abs(px - 0.7) < 1e-3, `px ${px}`);
@@ -40,12 +37,12 @@ test("fitCubic reproduces a polynomial easing to near-zero error", () => {
   for (let i = 0; i <= 12; i++) {
     const t = i / 12;
     xs.push(t);
-    ys.push(cbz(t, C[1], C[3]));
+    ys.push(bernstein3(t, C[1], C[3]));
   }
   const fit = fitCubic(xs, ys);
   for (let i = 0; i <= 24; i++) {
     const x = i / 24;
-    assert.ok(Math.abs(ease(x, fit) - cbz(x, C[1], C[3])) < 1e-4);
+    assert.ok(Math.abs(ease(x, fit) - bernstein3(x, C[1], C[3])) < 1e-4);
   }
 });
 

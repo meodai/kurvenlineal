@@ -24,7 +24,7 @@ export const bernstein2 = (t: number, a: number): number =>
 export const bernstein3 = (t: number, a1: number, a2: number): number =>
   3 * t * (1 - t) ** 2 * a1 + 3 * t * t * (1 - t) * a2 + t ** 3;
 
-const dcb = (t: number, a1: number, a2: number) =>
+const dBernstein3 = (t: number, a1: number, a2: number) =>
   3 * (1 - t) ** 2 * a1 + 6 * t * (1 - t) * (a2 - a1) + 3 * t * t * (1 - a2);
 
 /** invert x(t) = x for a quadratic — closed form */
@@ -40,7 +40,7 @@ export const solveT3 = (x: number, x1: number, x2: number): number => {
   for (let i = 0; i < 12; i++) {
     const err = bernstein3(t, x1, x2) - x;
     if (Math.abs(err) < 1e-12) return t;
-    const slope = dcb(t, x1, x2);
+    const slope = dBernstein3(t, x1, x2);
     if (Math.abs(slope) < 1e-9) break;
     t = clamp01(t - err / slope);
   }
@@ -156,7 +156,7 @@ export function fitCubic(
       for (let i = 0; i < t.length; i++) {
         for (let k = 0; k < 4; k++) {
           const err = bernstein3(t[i], p1[0], p2[0]) - xs[i];
-          const slope = dcb(t[i], p1[0], p2[0]);
+          const slope = dBernstein3(t[i], p1[0], p2[0]);
           if (Math.abs(slope) < 1e-9) break;
           t[i] = clamp01(t[i] - err / slope);
         }
