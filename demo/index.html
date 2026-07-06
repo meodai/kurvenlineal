@@ -105,8 +105,18 @@
     color: inherit;
     border: 2px solid currentColor;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
     box-shadow: 0 0 0 0 currentColor;
     transition: transform .15s ease, box-shadow .15s linear;
+  }
+
+  .icon {
+    width: 1em;
+    height: 1em;
+    flex: none;
+    display: block;
   }
   .button:hover { transform: translateY(-2px); box-shadow: 0 2px 0 0 currentColor; }
   .button:active { transform: translateY(0); box-shadow: 0 0 0 0 currentColor; }
@@ -201,6 +211,9 @@
     font-size: .85rem;
     cursor: pointer;
     position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
   }
   .tabs label + label { border-left: 1px solid var(--line); }
   .tabs input[type="radio"] {
@@ -333,8 +346,22 @@
 
   <div class="demo__controls">
     <div class="control control--actions">
-      <button id="randomize" class="button">Randomize sizes</button>
-      <button id="refit" class="button">Refit curve</button>
+      <button id="randomize" class="button">
+        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+          <circle cx="3" cy="12" r="1.4" fill="currentColor"/>
+          <circle cx="7" cy="5" r="1.4" fill="currentColor"/>
+          <circle cx="11" cy="10" r="1.4" fill="currentColor"/>
+          <circle cx="14" cy="3" r="1.4" fill="currentColor"/>
+        </svg>
+        Randomize sizes</button>
+      <button id="refit" class="button">
+        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M1,15 C7,15 11,7 15,1" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <circle cx="5.9" cy="13.1" r="1.3" fill="currentColor"/>
+          <circle cx="10.1" cy="8.5" r="1.3" fill="currentColor"/>
+          <circle cx="13.2" cy="3.8" r="1.3" fill="currentColor"/>
+        </svg>
+        Refit curve</button>
     </div>
     <div class="control">
       <label class="control__label" for="min">min</label>
@@ -355,8 +382,23 @@
     <div class="control">
       <span class="control__label" id="degreeLabel">degree</span>
       <div class="tabs" role="radiogroup" aria-labelledby="degreeLabel">
-        <label><input type="radio" name="degree" value="3" checked>cubic</label>
-        <label><input type="radio" name="degree" value="2">quad</label>
+        <label><input type="radio" name="degree" value="3" checked>
+          <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+            <line x1="1" y1="15" x2="5" y2="13" stroke="currentColor" stroke-width=".75" opacity=".45"/>
+            <line x1="15" y1="1" x2="11" y2="3" stroke="currentColor" stroke-width=".75" opacity=".45"/>
+            <path d="M1,15 C5,13 11,3 15,1" fill="none" stroke="currentColor" stroke-width="1.2"/>
+            <circle cx="5" cy="13" r="1.4" fill="currentColor"/>
+            <circle cx="11" cy="3" r="1.4" fill="currentColor"/>
+          </svg>
+          cubic</label>
+        <label><input type="radio" name="degree" value="2">
+          <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
+            <line x1="1" y1="15" x2="8" y2="11" stroke="currentColor" stroke-width=".75" opacity=".45"/>
+            <line x1="15" y1="1" x2="8" y2="11" stroke="currentColor" stroke-width=".75" opacity=".45"/>
+            <path d="M1,15 Q8,11 15,1" fill="none" stroke="currentColor" stroke-width="1.2"/>
+            <circle cx="8" cy="11" r="1.4" fill="currentColor"/>
+          </svg>
+          quad</label>
       </div>
     </div>
     <div class="control">
