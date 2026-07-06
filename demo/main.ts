@@ -1,4 +1,12 @@
-import { fitQuad, fitCubic, ease, elevate, type Curve, type Quad } from "../src/index.ts";
+import {
+  fitQuad,
+  fitCubic,
+  ease,
+  elevate,
+  toCSS,
+  type Curve,
+  type Quad,
+} from "../src/index.ts";
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
@@ -115,10 +123,19 @@ function renderCurve(): void {
   const X = (v: number) => v * 100;
   const Y = (v: number) => 100 - v * 100;
 
-  el("rect", { x: 0, y: 0, width: 100, height: 100, fill: "none", stroke: "var(--line)" }, svg);
+  el("rect", {
+    x: 0, y: 0, width: 100, height: 100, fill: "none", stroke: "var(--line)",
+    "stroke-width": 1, "vector-effect": "non-scaling-stroke",
+  }, svg);
   for (const q of [25, 50, 75]) {
-    el("line", { x1: q, y1: 0, x2: q, y2: 100, stroke: "var(--line)", "stroke-width": 0.5 }, svg);
-    el("line", { x1: 0, y1: q, x2: 100, y2: q, stroke: "var(--line)", "stroke-width": 0.5 }, svg);
+    el("line", {
+      x1: q, y1: 0, x2: q, y2: 100, stroke: "var(--line)",
+      "stroke-width": 1, "vector-effect": "non-scaling-stroke",
+    }, svg);
+    el("line", {
+      x1: 0, y1: q, x2: 100, y2: q, stroke: "var(--line)",
+      "stroke-width": 1, "vector-effect": "non-scaling-stroke",
+    }, svg);
   }
   // data points (frozen, gold) and where they live now (ink, riding the curve)
   const { data, min, max } = state;
@@ -131,7 +148,8 @@ function renderCurve(): void {
     if (Math.abs(y1p - y0) > 0.75)
       el("line", {
         x1: x, y1: y0, x2: x, y2: y1p,
-        stroke: "var(--soft)", "stroke-width": 0.5, "stroke-dasharray": "1.5 1.5",
+        stroke: "var(--soft)", "stroke-width": 1, "stroke-dasharray": "1.5 1.5",
+        "vector-effect": "non-scaling-stroke",
       }, svg);
   });
   data.forEach((v, i) =>
@@ -154,17 +172,26 @@ function renderCurve(): void {
     // the acrylic ruler: a translucent band with a sharp drawn edge
     el("path", {
       d: `M0,100 Q${X(px)},${Y(py)} 100,0`,
-      fill: "none", stroke: "var(--acryl-soft)", "stroke-width": 3.5,
+      fill: "none", stroke: "var(--acryl-soft)", "stroke-width": 7,
+      "vector-effect": "non-scaling-stroke",
     }, svg);
     el("path", {
       d: `M0,100 Q${X(px)},${Y(py)} 100,0`,
-      fill: "none", stroke: "var(--acryl)", "stroke-width": 0.9,
+      fill: "none", stroke: "var(--acryl)", "stroke-width": 1.5,
+      "vector-effect": "non-scaling-stroke",
     }, svg);
-    el("line", { x1: 0, y1: 100, x2: X(px), y2: Y(py), stroke: "var(--soft)", "stroke-width": 0.5 }, svg);
-    el("line", { x1: 100, y1: 0, x2: X(px), y2: Y(py), stroke: "var(--soft)", "stroke-width": 0.5 }, svg);
+    el("line", {
+      x1: 0, y1: 100, x2: X(px), y2: Y(py), stroke: "var(--soft)",
+      "stroke-width": 1, "vector-effect": "non-scaling-stroke",
+    }, svg);
+    el("line", {
+      x1: 100, y1: 0, x2: X(px), y2: Y(py), stroke: "var(--soft)",
+      "stroke-width": 1, "vector-effect": "non-scaling-stroke",
+    }, svg);
     el("circle", {
       cx: X(px), cy: Y(py), r: 3.4, fill: "var(--bg)", stroke: "var(--text)",
-      "stroke-width": 1, "data-handle": 0, style: "cursor:grab",
+      "stroke-width": 1.5, "vector-effect": "non-scaling-stroke",
+      "data-handle": 0, style: "cursor:grab",
     }, svg);
     $("curveInfo").innerHTML =
       `Q(<b>${state.params.map(fmt).join(", ")}</b>) &middot; ` +
@@ -174,18 +201,27 @@ function renderCurve(): void {
     // the acrylic ruler: a translucent band with a sharp drawn edge
     el("path", {
       d: `M0,100 C${X(x1)},${Y(y1)} ${X(x2)},${Y(y2)} 100,0`,
-      fill: "none", stroke: "var(--acryl-soft)", "stroke-width": 3.5,
+      fill: "none", stroke: "var(--acryl-soft)", "stroke-width": 7,
+      "vector-effect": "non-scaling-stroke",
     }, svg);
     el("path", {
       d: `M0,100 C${X(x1)},${Y(y1)} ${X(x2)},${Y(y2)} 100,0`,
-      fill: "none", stroke: "var(--acryl)", "stroke-width": 0.9,
+      fill: "none", stroke: "var(--acryl)", "stroke-width": 1.5,
+      "vector-effect": "non-scaling-stroke",
     }, svg);
-    el("line", { x1: 0, y1: 100, x2: X(x1), y2: Y(y1), stroke: "var(--soft)", "stroke-width": 0.5 }, svg);
-    el("line", { x1: 100, y1: 0, x2: X(x2), y2: Y(y2), stroke: "var(--soft)", "stroke-width": 0.5 }, svg);
+    el("line", {
+      x1: 0, y1: 100, x2: X(x1), y2: Y(y1), stroke: "var(--soft)",
+      "stroke-width": 1, "vector-effect": "non-scaling-stroke",
+    }, svg);
+    el("line", {
+      x1: 100, y1: 0, x2: X(x2), y2: Y(y2), stroke: "var(--soft)",
+      "stroke-width": 1, "vector-effect": "non-scaling-stroke",
+    }, svg);
     ([[x1, y1, 0], [x2, y2, 1]] as const).forEach(([hx, hy, idx]) => {
       el("circle", {
         cx: X(hx), cy: Y(hy), r: 3.4, fill: "var(--bg)", stroke: "var(--text)",
-        "stroke-width": 1, "data-handle": idx, style: "cursor:grab",
+        "stroke-width": 1.5, "vector-effect": "non-scaling-stroke",
+        "data-handle": idx, style: "cursor:grab",
       }, svg);
     });
     $("curveInfo").innerHTML = `cubic-bezier(<b>${state.params.map(fmt).join(", ")}</b>)`;
@@ -244,15 +280,14 @@ function renderBars(): void {
       : "") +
     (monotone ? "" : ` &middot; <b style="color:var(--acryl)">non-monotone</b>`);
 
-  $("code").textContent =
-    state.params.length === 2
-      ? `// scale = min + ease(i / (n-1)) * (max - min)
-const ease = quadEasing(${state.params.map(fmt).join(", ")});
-// css: cubic-bezier(${elevate(curve() as Quad).map(fmt).join(", ")})
-const scale = [${fitted.map((v) => Math.round(v)).join(", ")}];`
-      : `// scale = min + ease(i / (n-1)) * (max - min)
-const ease = cubicEasing(${state.params.map(fmt).join(", ")});
-const scale = [${fitted.map((v) => Math.round(v)).join(", ")}];`;
+  const degreeArg = state.degree === 2 ? ", 2" : "";
+  const offsetArg = state.offsetMode === "off" ? "" : `, "${state.offsetMode}"`;
+  $("code").textContent = `import { fitScale } from "kurvenlineal";
+
+const fit = fitScale([${data.join(", ")}]${degreeArg});
+
+fit.css;      // "${toCSS(curve())}"
+fit.sizes(${steps}${offsetArg}); // [${fitted.map((v) => Math.round(v)).join(", ")}]`;
 }
 
 function render(): void {

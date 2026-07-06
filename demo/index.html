@@ -155,7 +155,7 @@
 
       .control--actions {
         flex-direction: row;
-        gap: 0.5rem;
+        gap: 0rem;
       }
 
       /* steps: a ruler — the instrument's own graduations */
@@ -328,6 +328,14 @@
       .bars-wrap {
         position: relative;
       }
+      .bars-wrap svg {
+        height: 380px;
+      }
+      @media (max-width: 760px) {
+        .bars-wrap svg {
+          height: 220px;
+        }
+      }
       .bar-labels {
         position: absolute;
         inset: 2px;
@@ -450,10 +458,7 @@
       <main class="demo">
         <header class="demo__header">
           <h1 class="demo__title">kurvenlineal</h1>
-          <p class="demo__subtitle">
-            random sizes &rarr; sort &rarr; fit a bezier &rarr; the curve owns
-            the scale
-          </p>
+          <p class="demo__subtitle">bezier curve fitting</p>
         </header>
 
         <div class="demo__controls">
@@ -604,7 +609,6 @@
                 id="bars"
                 viewBox="0 0 100 46"
                 preserveAspectRatio="none"
-                style="height: 220px"
                 aria-label="Size comparison bars"
               ></svg>
               <div class="bar-labels" id="barLabels"></div>
