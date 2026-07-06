@@ -421,16 +421,22 @@
     <a href="https://github.com/meodai/kurvenlineal">GitHub</a>
   </div>
   <p>
-    A Kurvenlineal is the drafting instrument you lay on paper when a set of
-    points needs to become one clean curve. This library does the same for
-    design-system scales: hand it the sizes you already have — type scale,
-    spacing scale, whatever — and it returns the bezier easing that owns them,
-    as a quadratic (one control point) or cubic (two).
+    kurvenlineal is a bezier easing run in reverse. Normally you start with a
+    <code>cubic-bezier()</code> and sample values from it — here you start with
+    the values: hand it a list of numbers and it finds the quadratic or cubic
+    easing (endpoints fixed at 0,0&thinsp;&rarr;&thinsp;1,1) that fits them
+    best, by least squares.
   </p>
   <p>
-    The fit also freezes each value's deviation from the curve, so a resampled
-    scale can carry the original mess along — as absolute offsets or relative
+    The fit also records each value's deviation from the curve, so a resampled
+    list can carry those deviations along — as absolute offsets or relative
     ratios.
+  </p>
+  <p>
+    One thing it's useful for: design-system scales. Point it at the type or
+    spacing sizes you already have and you get the curve behind them — as a
+    function, or as a CSS timing function — plus the ability to resample the
+    scale to any number of steps.
   </p>
   <h2>Acknowledgments</h2>
   <p>
