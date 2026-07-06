@@ -94,7 +94,6 @@
       .control {
         display: flex;
         flex-direction: column;
-        gap: 0.3rem;
       }
 
       .control__label {
@@ -155,7 +154,10 @@
 
       .control--actions {
         flex-direction: row;
-        gap: 0rem;
+        .button + .button {
+          margin-left: -2px;
+        }
+
       }
 
       /* steps: a ruler — the instrument's own graduations */
