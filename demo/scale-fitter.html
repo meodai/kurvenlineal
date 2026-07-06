@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>scale fitter</title>
+<style>
+  :root {
+    --bg: #ECEDE7;
+    --panel: #FFFFFF;
+    --ink: #1B1C18;
+    --ink-soft: #8A8B84;
+    --gold: #E3B505;
+    --hot: #F04E23;
+    --line: #D8D9D2;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 13px/1.5 ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+    padding: 24px;
+  }
+  header { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+  h1 { font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+  header p { color: var(--ink-soft); }
+
+  .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+  button {
+    font: inherit; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--ink); border-radius: 2px;
+    padding: 6px 12px; cursor: pointer;
+  }
+  button:hover { background: var(--ink); color: var(--panel); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--hot); outline-offset: 2px; }
+  label { display: inline-flex; gap: 6px; align-items: center; color: var(--ink-soft); }
+  input[type="number"], select {
+    font: inherit; padding: 5px 6px;
+    border: 1px solid var(--line); border-radius: 2px; background: var(--panel); color: var(--ink);
+  }
+  input[type="number"] { width: 64px; }
+  input[type="range"] { accent-color: var(--ink); }
+
+  .stage { display: grid; grid-template-columns: 360px 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 760px) { .stage { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 12px; }
+  .panel h2 {
+    font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-soft); margin-bottom: 8px;
+  }
+  svg { display: block; width: 100%; height: auto; touch-action: none; }
+
+  .readout { margin-top: 8px; color: var(--ink-soft); }
+  .readout b { color: var(--ink); font-weight: 600; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip {
+    border: 1px solid var(--line); border-radius: 2px; padding: 3px 7px; background: var(--panel);
+  }
+  .chip s { text-decoration: none; color: var(--ink-soft); font-size: 11px; margin-left: 5px; }
+
+  pre {
+    margin-top: 16px; background: var(--ink); color: var(--bg);
+    padding: 14px; border-radius: 3px; overflow-x: auto; position: relative;
+  }
+  pre button {
+    position: absolute; top: 8px; right: 8px;
+    background: transparent; color: var(--bg); border-color: var(--ink-soft); font-size: 11px; padding: 3px 8px;
+  }
+  pre button:hover { background: var(--bg); color: var(--ink); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>scale fitter</h1>
+  <p>random sizes &rarr; sort &rarr; fit a cubic &rarr; the curve owns the scale</p>
+</header>
+
+<div class="controls">
+  <button id="randomize">Randomize sizes</button>
+  <button id="refit">Refit curve to data</button>
+  <label>min <input id="min" type="number" step="1" value="4"></label>
+  <label>max <input id="max" type="number" step="1" value="96"></label>
+  <label>steps <input id="steps" type="range" min="3" max="24" value="12"> <span id="stepsOut">12</span></label>
+  <label>degree <select id="degree">
+    <option value="3">3 &middot; two handles</option>
+    <option value="2">2 &middot; one handle</option>
+  </select></label>
+  <label>offsets <select id="offsetMode">
+    <option value="delta">+delta</option>
+    <option value="ratio">&times;ratio</option>
+    <option value="off">off</option>
+  </select></label>
+</div>
+
+<div class="stage">
+  <div class="panel">
+    <h2>curve &middot; drag handles</h2>
+    <svg id="curve" viewBox="0 0 100 100" aria-label="Easing curve editor"></svg>
+    <div class="readout" id="curveInfo"></div>
+  </div>
+  <div class="panel">
+    <h2>sizes &middot; <span style="color:var(--gold)">&#9632;</span> output &middot; <span style="color:var(--ink)">&#9633;</span> on curve</h2>
+    <svg id="bars" viewBox="0 0 100 46" preserveAspectRatio="none" style="height:220px" aria-label="Size comparison bars"></svg>
+    <div class="chips" id="chips"></div>
+    <div class="readout" id="fitInfo"></div>
+  </div>
+</div>
+
+<pre id="codeWrap"><button id="copy">copy</button><code id="code"></code></pre>
+
+<script>
+// ---------- bezier fit (fixed endpoints 0,0 / 1,1) ----------
+const bez  = (t, a1, a2) => 3*t*(1-t)**2*a1 + 3*t*t*(1-t)*a2 + t**3;
+const dbez = (t, a1, a2) => 3*(1-t)**2*a1 + 6*t*(1-t)*(a2-a1) + 3*t*t*(1-a2);
+// degree 2, single control point — x(t) is quadratic, so t(x) is closed form
+const qbez = (t, a) => 2*t*(1-t)*a + t*t;
+function qsolveT(x, px) {
+  const k = 1 - 2*px;
+  if (Math.abs(k) < 1e-9) return x;
+  return clamp01((-px + Math.sqrt(px*px + k*x)) / k);
+}
+const clamp01 = v => Math.min(1, Math.max(0, v));
+
+function fitCubicEasing(xs, ys, iterations = 10) {
+  // the alternating solve is fixed at the identity x-parametrization
+  // (handles at thirds → polynomial y(x)), so also run it seeded from the
+  // elevated quad fit and keep the best candidate — cubic never loses to quad
+  const solve = t0 => {
+  const t = t0.slice();
+  let p1 = [1/3, 1/3], p2 = [2/3, 2/3];
+  for (let iter = 0; iter < iterations; iter++) {
+    let a11=0, a12=0, a22=0, rx1=0, rx2=0, ry1=0, ry2=0;
+    for (let i = 0; i < t.length; i++) {
+      const ti = t[i];
+      const c1 = 3*ti*(1-ti)**2, c2 = 3*ti*ti*(1-ti), c3 = ti**3;
+      a11 += c1*c1; a12 += c1*c2; a22 += c2*c2;
+      rx1 += c1*(xs[i]-c3); rx2 += c2*(xs[i]-c3);
+      ry1 += c1*(ys[i]-c3); ry2 += c2*(ys[i]-c3);
+    }
+    const det = a11*a22 - a12*a12;
+    if (Math.abs(det) < 1e-12) break;
+    p1 = [(rx1*a22 - rx2*a12)/det, (ry1*a22 - ry2*a12)/det];
+    p2 = [(rx2*a11 - rx1*a12)/det, (ry2*a11 - ry1*a12)/det];
+    // clamp x for validity, y for monotone sizes
+    p1 = p1.map(clamp01); p2 = p2.map(clamp01);
+    for (let i = 0; i < t.length; i++) {
+      for (let k = 0; k < 4; k++) {
+        const err = bez(t[i], p1[0], p2[0]) - xs[i];
+        const slope = dbez(t[i], p1[0], p2[0]);
+        if (Math.abs(slope) < 1e-9) break;
+        t[i] = clamp01(t[i] - err/slope);
+      }
+    }
+  }
+  return [p1[0], p1[1], p2[0], p2[1]];
+  };
+  // pick by max error — the metric the readout reports
+  const maxErr = c => Math.max(...xs.map((x, i) => Math.abs(easingAt(x, c) - ys[i])));
+  const q = fitQuadEasing(xs, ys);
+  return [solve(xs), elevate(q), solve(xs.map(x => qsolveT(x, q[0])))]
+    .reduce((a, b) => maxErr(b) < maxErr(a) ? b : a);
+}
+
+function fitQuadEasing(xs, ys) {
+  // for fixed px, t is closed form and the optimal py is a single division;
+  // that leaves a 1-D search over px
+  const evalPx = px => {
+    const ts = xs.map(x => qsolveT(x, px));
+    let a = 0, ry = 0;
+    for (let i = 0; i < ts.length; i++) {
+      const c = 2*ts[i]*(1-ts[i]);
+      a += c*c; ry += c*(ys[i] - ts[i]*ts[i]);
+    }
+    const py = a > 1e-12 ? clamp01(ry/a) : 0.5;
+    let sse = 0;
+    for (let i = 0; i < ts.length; i++) sse += (qbez(ts[i], py) - ys[i])**2;
+    return { py, sse };
+  };
+  let lo = 0, hi = 1, best = { px: 0.5, ...evalPx(0.5) };
+  for (let round = 0; round < 4; round++) {
+    for (let i = 0; i <= 20; i++) {
+      const px = lo + (hi - lo) * i / 20;
+      const r = evalPx(px);
+      if (r.sse < best.sse) best = { px, ...r };
+    }
+    const w = (hi - lo) / 10;
+    lo = Math.max(0, best.px - w); hi = Math.min(1, best.px + w);
+  }
+  return [best.px, best.py];
+}
+
+// exact degree elevation: quad Q → cubic (2/3·Q, 1/3 + 2/3·Q)
+const elevate = ([px, py]) => [2*px/3, 2*py/3, (1 + 2*px)/3, (1 + 2*py)/3];
+
+function easingAt(x, params) {
+  if (params.length === 2) return qbez(qsolveT(x, params[0]), params[1]);
+  const [x1, y1, x2, y2] = params;
+  let t = x;
+  for (let k = 0; k < 8; k++) {
+    const err = bez(t, x1, x2) - x;
+    const slope = dbez(t, x1, x2);
+    if (Math.abs(slope) < 1e-9) break;
+    t = clamp01(t - err/slope);
+  }
+  return bez(t, y1, y2);
+}
+
+// ---------- state ----------
+const state = {
+  data: [],                 // sorted raw sizes (the "existing design system")
+  degree: 3,                // 2 = quad (one handle) | 3 = cubic
+  params: [1/3, 1/3, 2/3, 2/3],
+  residuals: [],            // per-point deviation from the curve, captured at refit
+  offsetMode: "delta",      // "delta" | "ratio" | "off"
+  min: 4, max: 96, steps: 12,
+};
+
+function randomSizes() {
+  const n = 8 + Math.floor(Math.random() * 7);
+  const { min, max } = state;
+  // random exponent + jitter → plausible messy scale
+  const exp = 1.2 + Math.random() * 2.2;
+  const sizes = Array.from({ length: n }, (_, i) => {
+    const t = i / (n - 1);
+    const jitter = 1 + (Math.random() - 0.5) * 0.35;
+    return min + (max - min) * Math.pow(t, exp) * jitter;
+  });
+  sizes[0] = min; sizes[n - 1] = max;
+  state.data = sizes.sort((a, b) => a - b).map(v => Math.round(v * 2) / 2);
+  state.steps = n; // 1:1 with the data until the user resamples on purpose
+  $("steps").value = n;
+  $("stepsOut").textContent = n;
+}
+
+function refit() {
+  const { data, min, max } = state;
+  const xs = data.map((_, i) => i / (data.length - 1));
+  const ys = data.map(v => (v - min) / (max - min));
+  state.params = state.degree === 2 ? fitQuadEasing(xs, ys) : fitCubicEasing(xs, ys);
+  // freeze each point's deviation from the curve — it rides along from now on
+  state.residuals = data.map((v, i) => {
+    const base = min + easingAt(xs[i], state.params) * (max - min);
+    return { x: xs[i], delta: v - base, ratio: base > 1e-6 ? v / base : 1 };
+  });
+}
+
+// linear interpolation of the frozen residuals, so any step count inherits them
+function residualAt(x) {
+  const r = state.residuals;
+  if (!r.length || state.offsetMode === "off") return { delta: 0, ratio: 1 };
+  if (x <= r[0].x) return r[0];
+  for (let i = 1; i < r.length; i++) {
+    if (x <= r[i].x) {
+      const t = (x - r[i - 1].x) / (r[i].x - r[i - 1].x);
+      return {
+        delta: r[i - 1].delta + t * (r[i].delta - r[i - 1].delta),
+        ratio: r[i - 1].ratio + t * (r[i].ratio - r[i - 1].ratio),
+      };
+    }
+  }
+  return r[r.length - 1];
+}
+
+function curveSizes(n, raw = false) {
+  const { min, max, params, offsetMode } = state;
+  return Array.from({ length: n }, (_, i) => {
+    const x = i / (n - 1);
+    const base = min + easingAt(x, params) * (max - min);
+    if (raw) return base;
+    const r = residualAt(x);
+    return offsetMode === "ratio" ? base * r.ratio : base + r.delta;
+  });
+}
+
+// ---------- render ----------
+const ns = "http://www.w3.org/2000/svg";
+const $ = id => document.getElementById(id);
+const el = (tag, attrs, parent) => {
+  const e = document.createElementNS(ns, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  parent.appendChild(e);
+  return e;
+};
+const fmt = v => (Math.round(v * 100) / 100).toString();
+
+function renderCurve() {
+  const svg = $("curve");
+  svg.textContent = "";
+  const X = v => v * 100, Y = v => 100 - v * 100;
+
+  el("rect", { x: 0, y: 0, width: 100, height: 100, fill: "none", stroke: "var(--line)" }, svg);
+  for (const q of [25, 50, 75]) {
+    el("line", { x1: q, y1: 0, x2: q, y2: 100, stroke: "var(--line)", "stroke-width": .5 }, svg);
+    el("line", { x1: 0, y1: q, x2: 100, y2: q, stroke: "var(--line)", "stroke-width": .5 }, svg);
+  }
+  // data points (frozen, gold) and where they live now (ink, riding the curve)
+  const { data, min, max } = state;
+  const span = max - min;
+  const now = curveSizes(data.length);
+  data.forEach((v, i) => {
+    const x = X(i / (data.length - 1));
+    const y0 = Y((v - min) / span);
+    const y1p = Y((now[i] - min) / span);
+    if (Math.abs(y1p - y0) > 0.75) el("line", {
+      x1: x, y1: y0, x2: x, y2: y1p,
+      stroke: "var(--ink-soft)", "stroke-width": .5, "stroke-dasharray": "1.5 1.5",
+    }, svg);
+  });
+  data.forEach((v, i) => el("circle", {
+    cx: X(i / (data.length - 1)),
+    cy: Y((v - min) / span),
+    r: 1.6, fill: "var(--gold)",
+  }, svg));
+  now.forEach((v, i) => el("circle", {
+    cx: X(i / (data.length - 1)),
+    cy: Y((v - min) / span),
+    r: 1, fill: "var(--ink)",
+  }, svg));
+  // curve + arms + handles
+  if (state.params.length === 2) {
+    const [px, py] = state.params;
+    el("path", {
+      d: `M0,100 Q${X(px)},${Y(py)} 100,0`,
+      fill: "none", stroke: "var(--ink)", "stroke-width": 1.4,
+    }, svg);
+    el("line", { x1: 0, y1: 100, x2: X(px), y2: Y(py), stroke: "var(--hot)", "stroke-width": .6 }, svg);
+    el("line", { x1: 100, y1: 0, x2: X(px), y2: Y(py), stroke: "var(--hot)", "stroke-width": .6 }, svg);
+    el("circle", {
+      cx: X(px), cy: Y(py), r: 3.4, fill: "var(--hot)", stroke: "var(--panel)",
+      "stroke-width": 1, "data-handle": 0, style: "cursor:grab",
+    }, svg);
+    $("curveInfo").innerHTML =
+      `Q(<b>${state.params.map(fmt).join(", ")}</b>) &middot; ` +
+      `&equiv; cubic-bezier(${elevate(state.params).map(fmt).join(", ")})`;
+  } else {
+    const [x1, y1, x2, y2] = state.params;
+    el("path", {
+      d: `M0,100 C${X(x1)},${Y(y1)} ${X(x2)},${Y(y2)} 100,0`,
+      fill: "none", stroke: "var(--ink)", "stroke-width": 1.4,
+    }, svg);
+    el("line", { x1: 0, y1: 100, x2: X(x1), y2: Y(y1), stroke: "var(--hot)", "stroke-width": .6 }, svg);
+    el("line", { x1: 100, y1: 0, x2: X(x2), y2: Y(y2), stroke: "var(--hot)", "stroke-width": .6 }, svg);
+    [[x1, y1, 0], [x2, y2, 1]].forEach(([hx, hy, idx]) => {
+      el("circle", {
+        cx: X(hx), cy: Y(hy), r: 3.4, fill: "var(--hot)", stroke: "var(--panel)",
+        "stroke-width": 1, "data-handle": idx, style: "cursor:grab",
+      }, svg);
+    });
+    $("curveInfo").innerHTML =
+      `cubic-bezier(<b>${state.params.map(fmt).join(", ")}</b>)`;
+  }
+}
+
+function renderBars() {
+  const svg = $("bars");
+  svg.textContent = "";
+  const { data, min, max, steps } = state;
+  const H = 46;
+
+  // actual output (curve ⊕ residual), gold
+  const fitted = curveSizes(steps);
+  const onCurve = curveSizes(steps, true);
+  const wf = 100 / steps;
+  fitted.forEach((v, i) => {
+    const h = (v / max) * (H - 2);
+    el("rect", { x: i * wf + .5, y: H - h, width: wf - 1, height: h, fill: "var(--gold)" }, svg);
+  });
+  // where each step would land if it sat exactly on the bezier, ink outline
+  onCurve.forEach((v, i) => {
+    const h = (v / max) * (H - 2);
+    el("rect", {
+      x: i * wf + .5, y: H - h, width: wf - 1, height: h,
+      fill: "none", stroke: "var(--ink)", "stroke-width": .5,
+      "vector-effect": "non-scaling-stroke",
+    }, svg);
+  });
+
+  // chips: fitted sizes, with original next to it when counts match
+  $("chips").innerHTML = fitted.map((v, i) => {
+    const r = Math.round(v);
+    const orig = steps === data.length ? `<s>${fmt(data[i])}</s>` : "";
+    return `<span class="chip">${r}px${orig}</span>`;
+  }).join("");
+
+  // fit error only meaningful against the data points
+  const xs = data.map((_, i) => i / (data.length - 1));
+  let maxErr = 0;
+  xs.forEach((x, i) => {
+    const fit = min + easingAt(x, state.params) * (max - min);
+    maxErr = Math.max(maxErr, Math.abs(fit - data[i]));
+  });
+  const monotone = fitted.every((v, i) => i === 0 || v >= fitted[i - 1]);
+  $("fitInfo").innerHTML =
+    `data n=<b>${data.length}</b> &middot; max fit error <b>${fmt(maxErr)}px</b>` +
+    (steps !== data.length ? ` &middot; resampled to <b>${steps}</b> steps` : "") +
+    (state.offsetMode !== "off" ? ` &middot; offsets <b>${state.offsetMode === "ratio" ? "&times;ratio" : "+delta"}</b>` : "") +
+    (monotone ? "" : ` &middot; <b style="color:var(--hot)">non-monotone</b>`);
+
+  $("code").textContent = state.params.length === 2
+    ? `// scale = min + ease(i / (n-1)) * (max - min)
+const ease = quadEasing(${state.params.map(fmt).join(", ")});
+// css: cubic-bezier(${elevate(state.params).map(fmt).join(", ")})
+const scale = [${fitted.map(v => Math.round(v)).join(", ")}];`
+    : `// scale = min + ease(i / (n-1)) * (max - min)
+const ease = cubicEasing(${state.params.map(fmt).join(", ")});
+const scale = [${fitted.map(v => Math.round(v)).join(", ")}];`;
+}
+
+function render() { renderCurve(); renderBars(); }
+
+// ---------- interaction ----------
+$("curve").addEventListener("pointerdown", e => {
+  const idx = e.target.getAttribute("data-handle");
+  if (idx === null) return;
+  const svg = $("curve");
+  svg.setPointerCapture(e.pointerId);
+  const move = ev => {
+    const r = svg.getBoundingClientRect();
+    const x = clamp01((ev.clientX - r.left) / r.width);
+    const y = clamp01(1 - (ev.clientY - r.top) / r.height); // y clamped → monotone scale
+    state.params[idx * 2] = x;
+    state.params[idx * 2 + 1] = y;
+    render();
+  };
+  const up = () => {
+    svg.removeEventListener("pointermove", move);
+    svg.removeEventListener("pointerup", up);
+  };
+  svg.addEventListener("pointermove", move);
+  svg.addEventListener("pointerup", up);
+});
+
+$("randomize").addEventListener("click", () => { randomSizes(); refit(); render(); });
+$("refit").addEventListener("click", () => { refit(); render(); });
+$("steps").addEventListener("input", e => {
+  state.steps = +e.target.value;
+  $("stepsOut").textContent = state.steps;
+  renderBars();
+});
+$("degree").addEventListener("change", e => {
+  state.degree = +e.target.value;
+  refit(); render();
+});
+$("offsetMode").addEventListener("change", e => {
+  state.offsetMode = e.target.value;
+  render();
+});
+["min", "max"].forEach(id => $(id).addEventListener("change", e => {
+  state[id] = +e.target.value;
+  if (state.min >= state.max) state.min = state.max - 1;
+  $("min").value = state.min; $("max").value = state.max;
+  randomSizes(); refit(); render();
+}));
+$("copy").addEventListener("click", () =>
+  navigator.clipboard.writeText($("code").textContent));
+
+// go
+randomSizes(); refit(); render();
+</script>
+</body>
+</html>

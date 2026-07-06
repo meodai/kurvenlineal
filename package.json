@@ -1,0 +1,25 @@
+{
+  "name": "kurvenlineal",
+  "version": "0.1.0",
+  "description": "fit a bezier easing (quadratic or cubic) to an existing size scale — the curve owns the scale",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": ["easing", "bezier", "curve-fitting", "design-tokens", "type-scale", "spacing-scale"],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}
