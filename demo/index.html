@@ -3,112 +3,416 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>scale fitter</title>
+<title>kurvenlineal — scale fitter</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Iosevka/6.0.0/iosevka/iosevka.min.css">
 <style>
   :root {
-    --bg: #ECEDE7;
-    --panel: #FFFFFF;
-    --ink: #1B1C18;
-    --ink-soft: #8A8B84;
-    --gold: #E3B505;
-    --hot: #F04E23;
-    --line: #D8D9D2;
+    color-scheme: light dark;
+    font-family: 'Iosevka Web', ui-monospace, 'SF Mono', Menlo, monospace;
+    line-height: 1.5;
+    font-weight: 300;
+
+    --white: #fff;
+    --black: #292f2f;
+
+    --bg: light-dark(var(--white), var(--black));
+    --text: light-dark(var(--black), var(--white));
+    --line: color-mix(in lab, currentColor 20%, var(--bg));
+    --soft: color-mix(in lab, currentColor 55%, var(--bg));
+
+    /* the acrylic of a real Kurvenlineal: fluorescent orange, translucent */
+    --acryl: #ff5a26;
+    --acryl-soft: color-mix(in srgb, var(--acryl) 30%, transparent);
+
+    --dotSize: .75rem;
+    --ease: cubic-bezier(.3, .7, 0, 1);
+
+    background-color: var(--bg);
+    color: var(--text);
+
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
   }
+
+  ::selection { background: var(--text); color: var(--bg); }
+
   * { box-sizing: border-box; margin: 0; }
-  body {
+
+  body { font-size: 1rem; }
+
+  :focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+  .app {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 4rem 0;
+  }
+
+  .demo { width: min(64rem, 92vw); }
+
+  .demo__header { margin-bottom: 2rem; }
+
+  .demo__title {
+    font-size: 2rem;
+    font-weight: 200;
+    letter-spacing: -.05em;
+  }
+
+  .demo__subtitle { color: var(--soft); }
+
+  /* ---------- controls ---------- */
+  .demo__controls {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+
+  .control {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+  }
+
+  .control__label {
+    font-size: .8rem;
+    display: flex;
+    justify-content: space-between;
+    gap: .75rem;
+  }
+
+  .control__label b { font-weight: 700; }
+
+  .control__input {
+    font: inherit;
+    border: 2px solid currentColor;
     background: var(--bg);
-    color: var(--ink);
-    font: 13px/1.5 ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
-    padding: 24px;
+    color: inherit;
+    padding: .35rem .5rem;
+    font-size: .9rem;
+    width: 5rem;
   }
-  header { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
-  h1 { font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
-  header p { color: var(--ink-soft); }
+  .control__input:focus-visible { outline-offset: -4px; }
 
-  .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
-  button {
-    font: inherit; color: var(--ink); background: var(--panel);
-    border: 1px solid var(--ink); border-radius: 2px;
-    padding: 6px 12px; cursor: pointer;
+  .button {
+    font: inherit;
+    font-size: .85rem;
+    padding: .46rem .9rem;
+    background: var(--bg);
+    color: inherit;
+    border: 2px solid currentColor;
+    cursor: pointer;
+    box-shadow: 0 0 0 0 currentColor;
+    transition: transform .15s ease, box-shadow .15s linear;
   }
-  button:hover { background: var(--ink); color: var(--panel); }
-  button:focus-visible, input:focus-visible { outline: 2px solid var(--hot); outline-offset: 2px; }
-  label { display: inline-flex; gap: 6px; align-items: center; color: var(--ink-soft); }
-  input[type="number"], select {
-    font: inherit; padding: 5px 6px;
-    border: 1px solid var(--line); border-radius: 2px; background: var(--panel); color: var(--ink);
-  }
-  input[type="number"] { width: 64px; }
-  input[type="range"] { accent-color: var(--ink); }
+  .button:hover { transform: translateY(-2px); box-shadow: 0 2px 0 0 currentColor; }
+  .button:active { transform: translateY(0); box-shadow: 0 0 0 0 currentColor; }
 
-  .stage { display: grid; grid-template-columns: 360px 1fr; gap: 16px; align-items: start; }
+  .control--actions { flex-direction: row; gap: .5rem; }
+
+  /* steps: a ruler — the instrument's own graduations */
+  .control--steps { flex: 1 1 10rem; min-width: 10rem; max-width: 18rem; }
+
+  .ruler {
+    position: relative;
+    height: 1.6rem;
+  }
+  .ruler::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: currentColor;
+    pointer-events: none;
+  }
+  .ruler::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 10px;
+    --count: 8;
+    background-image: linear-gradient(to right, currentColor 1px, transparent 1px);
+    background-size: calc((100% - 1px) / (var(--count) - 1)) 8px;
+    background-repeat: repeat-x;
+    pointer-events: none;
+  }
+  .ruler i {
+    position: absolute;
+    top: 2px; left: 0;
+    width: 100%;
+    height: 4px;
+    --count: 8;
+    background-image: linear-gradient(to right,
+      transparent,
+      transparent calc(100% - .5px),
+      var(--line) calc(100% - .5px));
+    background-size: calc((100% - .5px) / ((var(--count) - 1) * 3)) 100%;
+    pointer-events: none;
+  }
+
+  .ruler input[type="range"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    margin: 0;
+    z-index: 1;
+  }
+
+  .range-marker {
+    position: absolute;
+    left: calc(1px + var(--progress, .43) * (100% - 2px));
+    top: 17px;
+    width: calc(var(--dotSize) * .35);
+    height: calc(var(--dotSize) * .35);
+    background: var(--bg);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    box-shadow: 0 0 0 1px currentColor, 0 0 0 .25rem var(--bg);
+    transition: left .15s var(--ease);
+  }
+  .range-marker::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 2px);
+    width: 1px;
+    height: 10px;
+    background: currentColor;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  /* degree / offsets: bordered tab groups, checked = inverted */
+  .tabs {
+    display: flex;
+    border: 2px solid currentColor;
+    background: var(--bg);
+  }
+  .tabs label {
+    padding: .4rem .8rem;
+    font-size: .85rem;
+    cursor: pointer;
+    position: relative;
+  }
+  .tabs label + label { border-left: 1px solid var(--line); }
+  .tabs input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .tabs label:has(input:checked) {
+    background: var(--text);
+    color: var(--bg);
+  }
+  .tabs label:has(input:focus-visible) { outline: 2px solid var(--text); outline-offset: 2px; }
+
+  /* ---------- stage ---------- */
+  .stage {
+    display: grid;
+    grid-template-columns: minmax(300px, 380px) 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
   @media (max-width: 760px) { .stage { grid-template-columns: 1fr; } }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 12px; }
+
   .panel h2 {
-    font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
-    color: var(--ink-soft); margin-bottom: 8px;
+    font-size: .8rem;
+    font-weight: 300;
+    color: var(--soft);
+    margin-bottom: .5rem;
   }
-  svg { display: block; width: 100%; height: auto; touch-action: none; }
+  .panel h2 b { font-weight: 700; color: var(--text); }
 
-  .readout { margin-top: 8px; color: var(--ink-soft); }
-  .readout b { color: var(--ink); font-weight: 600; }
+  .panel svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    touch-action: none;
+    border: 2px solid currentColor;
+  }
 
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .readout { margin-top: .5rem; font-size: .8rem; color: var(--soft); }
+  .readout b { color: var(--text); font-weight: 700; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .75rem; }
   .chip {
-    border: 1px solid var(--line); border-radius: 2px; padding: 3px 7px; background: var(--panel);
+    border: 1px solid var(--line);
+    padding: .15rem .45rem;
+    font-size: .8rem;
   }
-  .chip s { text-decoration: none; color: var(--ink-soft); font-size: 11px; margin-left: 5px; }
+  .chip s {
+    text-decoration: line-through;
+    color: var(--soft);
+    font-size: .85em;
+    margin-left: .35rem;
+  }
 
+  /* ---------- code ---------- */
   pre {
-    margin-top: 16px; background: var(--ink); color: var(--bg);
-    padding: 14px; border-radius: 3px; overflow-x: auto; position: relative;
+    margin-top: 1.5rem;
+    background: var(--text);
+    color: var(--bg);
+    padding: 1rem;
+    overflow-x: auto;
+    position: relative;
+    font-size: .8rem;
+    line-height: 1.5;
   }
-  pre button {
-    position: absolute; top: 8px; right: 8px;
-    background: transparent; color: var(--bg); border-color: var(--ink-soft); font-size: 11px; padding: 3px 8px;
+  pre ::selection { background: var(--bg); color: var(--text); }
+  pre code { font: inherit; }
+  pre .button {
+    position: absolute;
+    top: .5rem; right: .5rem;
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--bg);
+    font-size: .7rem;
+    padding: .2rem .55rem;
   }
-  pre button:hover { background: var(--bg); color: var(--ink); }
+  pre .button:hover { box-shadow: 0 2px 0 0 var(--bg); }
+
+  /* ---------- about ---------- */
+  .about {
+    max-width: 40rem;
+    margin: 5vmin auto;
+    padding: 0 1.5rem;
+    font-size: .9rem;
+    line-height: 1.6;
+  }
+  .about h1, .about h2 { font-weight: 200; letter-spacing: -.03em; }
+  .about h2 { margin-top: 2em; margin-bottom: .5em; }
+  .about p + p { margin-top: .75em; }
+
+  .about__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  a:hover { text-decoration-thickness: 2px; }
+  .about a[href^="http"]::after {
+    content: " ↗";
+    display: inline-block;
+    font-size: .75em;
+    vertical-align: top;
+    transition: transform .2s var(--ease);
+    transform: translate(var(--translateAmount, 2px), calc(var(--translateAmount, 2px) * -1));
+  }
+  .about a:hover { --translateAmount: 5px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; }
+  }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>scale fitter</h1>
-  <p>random sizes &rarr; sort &rarr; fit a cubic &rarr; the curve owns the scale</p>
-</header>
+<div class="app">
+<main class="demo">
+  <header class="demo__header">
+    <h1 class="demo__title">kurvenlineal</h1>
+    <p class="demo__subtitle">random sizes &rarr; sort &rarr; fit a bezier &rarr; the curve owns the scale</p>
+  </header>
 
-<div class="controls">
-  <button id="randomize">Randomize sizes</button>
-  <button id="refit">Refit curve to data</button>
-  <label>min <input id="min" type="number" step="1" value="4"></label>
-  <label>max <input id="max" type="number" step="1" value="96"></label>
-  <label>steps <input id="steps" type="range" min="3" max="24" value="12"> <span id="stepsOut">12</span></label>
-  <label>degree <select id="degree">
-    <option value="3">3 &middot; two handles</option>
-    <option value="2">2 &middot; one handle</option>
-  </select></label>
-  <label>offsets <select id="offsetMode">
-    <option value="delta">+delta</option>
-    <option value="ratio">&times;ratio</option>
-    <option value="off">off</option>
-  </select></label>
+  <div class="demo__controls">
+    <div class="control control--actions">
+      <button id="randomize" class="button">Randomize sizes</button>
+      <button id="refit" class="button">Refit curve</button>
+    </div>
+    <div class="control">
+      <label class="control__label" for="min">min</label>
+      <input id="min" class="control__input" type="number" step="1" value="4">
+    </div>
+    <div class="control">
+      <label class="control__label" for="max">max</label>
+      <input id="max" class="control__input" type="number" step="1" value="96">
+    </div>
+    <div class="control control--steps">
+      <label class="control__label" for="steps">steps <b id="stepsOut">12</b></label>
+      <div class="ruler">
+        <input id="steps" type="range" min="3" max="24" value="12">
+        <i></i>
+        <span class="range-marker"></span>
+      </div>
+    </div>
+    <div class="control">
+      <span class="control__label" id="degreeLabel">degree</span>
+      <div class="tabs" role="radiogroup" aria-labelledby="degreeLabel">
+        <label><input type="radio" name="degree" value="3" checked>cubic</label>
+        <label><input type="radio" name="degree" value="2">quad</label>
+      </div>
+    </div>
+    <div class="control">
+      <span class="control__label" id="offsetLabel">offsets</span>
+      <div class="tabs" role="radiogroup" aria-labelledby="offsetLabel">
+        <label><input type="radio" name="offsetMode" value="delta" checked>+delta</label>
+        <label><input type="radio" name="offsetMode" value="ratio">&times;ratio</label>
+        <label><input type="radio" name="offsetMode" value="off">off</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <section class="panel">
+      <h2>curve &middot; drag handles</h2>
+      <svg id="curve" viewBox="0 0 100 100" aria-label="Easing curve editor"></svg>
+      <div class="readout" id="curveInfo"></div>
+    </section>
+    <section class="panel">
+      <h2>sizes &middot; <b style="color:var(--acryl)">&#9632;</b> output &middot; &#9633; on curve</h2>
+      <svg id="bars" viewBox="0 0 100 46" preserveAspectRatio="none" style="height:220px" aria-label="Size comparison bars"></svg>
+      <div class="chips" id="chips"></div>
+      <div class="readout" id="fitInfo"></div>
+    </section>
+  </div>
+
+  <pre id="codeWrap"><button id="copy" class="button">copy</button><code id="code"></code></pre>
+</main>
 </div>
 
-<div class="stage">
-  <div class="panel">
-    <h2>curve &middot; drag handles</h2>
-    <svg id="curve" viewBox="0 0 100 100" aria-label="Easing curve editor"></svg>
-    <div class="readout" id="curveInfo"></div>
+<article class="about">
+  <div class="about__header">
+    <h1>kurvenlineal</h1>
+    <a href="https://github.com/meodai/kurvenlineal">GitHub</a>
   </div>
-  <div class="panel">
-    <h2>sizes &middot; <span style="color:var(--gold)">&#9632;</span> output &middot; <span style="color:var(--ink)">&#9633;</span> on curve</h2>
-    <svg id="bars" viewBox="0 0 100 46" preserveAspectRatio="none" style="height:220px" aria-label="Size comparison bars"></svg>
-    <div class="chips" id="chips"></div>
-    <div class="readout" id="fitInfo"></div>
-  </div>
-</div>
-
-<pre id="codeWrap"><button id="copy">copy</button><code id="code"></code></pre>
+  <p>
+    A Kurvenlineal is the drafting instrument you lay on paper when a set of
+    points needs to become one clean curve. This library does the same for
+    design-system scales: hand it the sizes you already have — type scale,
+    spacing scale, whatever — and it returns the bezier easing that owns them,
+    as a quadratic (one control point) or cubic (two).
+  </p>
+  <p>
+    The fit also freezes each value's deviation from the curve, so a resampled
+    scale can carry the original mess along — as absolute offsets or relative
+    ratios.
+  </p>
+  <h2>Acknowledgments</h2>
+  <p>
+    The library is dependency-free. The typeface is the open-source
+    <a href="https://be5invis.github.io/Iosevka/" target="_blank" rel="noopener noreferrer">Iosevka</a>.
+  </p>
+  <p>
+    Created by <a href="https://elastiq.ch" target="_blank" rel="noopener noreferrer">David Aerne</a>.
+  </p>
+</article>
 
 <script type="module" src="./main.ts"></script>
 </body>

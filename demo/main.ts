@@ -38,8 +38,19 @@ function randomSizes(): void {
   sizes[n - 1] = max;
   state.data = sizes.sort((a, b) => a - b).map((v) => Math.round(v * 2) / 2);
   state.steps = n; // 1:1 with the data until the user resamples on purpose
-  $<HTMLInputElement>("steps").value = String(n);
+  syncSteps(n);
+}
+
+// keep the range input, its readout, and the ruler marker in agreement
+function syncSteps(n: number): void {
+  const input = $<HTMLInputElement>("steps");
+  input.value = String(n);
   $("stepsOut").textContent = String(n);
+  const progress = (n - Number(input.min)) / (Number(input.max) - Number(input.min));
+  (document.querySelector(".range-marker") as HTMLElement).style.setProperty(
+    "--progress",
+    String(progress),
+  );
 }
 
 function refit(): void {
@@ -120,34 +131,39 @@ function renderCurve(): void {
     if (Math.abs(y1p - y0) > 0.75)
       el("line", {
         x1: x, y1: y0, x2: x, y2: y1p,
-        stroke: "var(--ink-soft)", "stroke-width": 0.5, "stroke-dasharray": "1.5 1.5",
+        stroke: "var(--soft)", "stroke-width": 0.5, "stroke-dasharray": "1.5 1.5",
       }, svg);
   });
   data.forEach((v, i) =>
     el("circle", {
       cx: X(i / (data.length - 1)),
       cy: Y((v - min) / span),
-      r: 1.6, fill: "var(--gold)",
+      r: 1.6, fill: "var(--text)",
     }, svg),
   );
   now.forEach((v, i) =>
     el("circle", {
       cx: X(i / (data.length - 1)),
       cy: Y((v - min) / span),
-      r: 1, fill: "var(--ink)",
+      r: 1, fill: "var(--acryl)",
     }, svg),
   );
   // curve + arms + handles
   if (state.params.length === 2) {
     const [px, py] = state.params;
+    // the acrylic ruler: a translucent band with a sharp drawn edge
     el("path", {
       d: `M0,100 Q${X(px)},${Y(py)} 100,0`,
-      fill: "none", stroke: "var(--ink)", "stroke-width": 1.4,
+      fill: "none", stroke: "var(--acryl-soft)", "stroke-width": 5,
     }, svg);
-    el("line", { x1: 0, y1: 100, x2: X(px), y2: Y(py), stroke: "var(--hot)", "stroke-width": 0.6 }, svg);
-    el("line", { x1: 100, y1: 0, x2: X(px), y2: Y(py), stroke: "var(--hot)", "stroke-width": 0.6 }, svg);
+    el("path", {
+      d: `M0,100 Q${X(px)},${Y(py)} 100,0`,
+      fill: "none", stroke: "var(--acryl)", "stroke-width": 1.2,
+    }, svg);
+    el("line", { x1: 0, y1: 100, x2: X(px), y2: Y(py), stroke: "var(--soft)", "stroke-width": 0.5 }, svg);
+    el("line", { x1: 100, y1: 0, x2: X(px), y2: Y(py), stroke: "var(--soft)", "stroke-width": 0.5 }, svg);
     el("circle", {
-      cx: X(px), cy: Y(py), r: 3.4, fill: "var(--hot)", stroke: "var(--panel)",
+      cx: X(px), cy: Y(py), r: 3.4, fill: "var(--bg)", stroke: "var(--text)",
       "stroke-width": 1, "data-handle": 0, style: "cursor:grab",
     }, svg);
     $("curveInfo").innerHTML =
@@ -155,15 +171,20 @@ function renderCurve(): void {
       `&equiv; cubic-bezier(${elevate(curve() as Quad).map(fmt).join(", ")})`;
   } else {
     const [x1, y1, x2, y2] = state.params;
+    // the acrylic ruler: a translucent band with a sharp drawn edge
     el("path", {
       d: `M0,100 C${X(x1)},${Y(y1)} ${X(x2)},${Y(y2)} 100,0`,
-      fill: "none", stroke: "var(--ink)", "stroke-width": 1.4,
+      fill: "none", stroke: "var(--acryl-soft)", "stroke-width": 5,
     }, svg);
-    el("line", { x1: 0, y1: 100, x2: X(x1), y2: Y(y1), stroke: "var(--hot)", "stroke-width": 0.6 }, svg);
-    el("line", { x1: 100, y1: 0, x2: X(x2), y2: Y(y2), stroke: "var(--hot)", "stroke-width": 0.6 }, svg);
+    el("path", {
+      d: `M0,100 C${X(x1)},${Y(y1)} ${X(x2)},${Y(y2)} 100,0`,
+      fill: "none", stroke: "var(--acryl)", "stroke-width": 1.2,
+    }, svg);
+    el("line", { x1: 0, y1: 100, x2: X(x1), y2: Y(y1), stroke: "var(--soft)", "stroke-width": 0.5 }, svg);
+    el("line", { x1: 100, y1: 0, x2: X(x2), y2: Y(y2), stroke: "var(--soft)", "stroke-width": 0.5 }, svg);
     ([[x1, y1, 0], [x2, y2, 1]] as const).forEach(([hx, hy, idx]) => {
       el("circle", {
-        cx: X(hx), cy: Y(hy), r: 3.4, fill: "var(--hot)", stroke: "var(--panel)",
+        cx: X(hx), cy: Y(hy), r: 3.4, fill: "var(--bg)", stroke: "var(--text)",
         "stroke-width": 1, "data-handle": idx, style: "cursor:grab",
       }, svg);
     });
@@ -183,14 +204,18 @@ function renderBars(): void {
   const wf = 100 / steps;
   fitted.forEach((v, i) => {
     const h = (v / max) * (H - 2);
-    el("rect", { x: i * wf + 0.5, y: H - h, width: wf - 1, height: h, fill: "var(--gold)" }, svg);
+    el("rect", {
+      x: i * wf + 0.5, y: H - h, width: wf - 1, height: h,
+      fill: "var(--acryl-soft)", stroke: "var(--acryl)", "stroke-width": 0.5,
+      "vector-effect": "non-scaling-stroke",
+    }, svg);
   });
   // where each step would land if it sat exactly on the bezier, ink outline
   onCurve.forEach((v, i) => {
     const h = (v / max) * (H - 2);
     el("rect", {
       x: i * wf + 0.5, y: H - h, width: wf - 1, height: h,
-      fill: "none", stroke: "var(--ink)", "stroke-width": 0.5,
+      fill: "none", stroke: "var(--text)", "stroke-width": 0.5,
       "vector-effect": "non-scaling-stroke",
     }, svg);
   });
@@ -218,7 +243,7 @@ function renderBars(): void {
     (state.offsetMode !== "off"
       ? ` &middot; offsets <b>${state.offsetMode === "ratio" ? "&times;ratio" : "+delta"}</b>`
       : "") +
-    (monotone ? "" : ` &middot; <b style="color:var(--hot)">non-monotone</b>`);
+    (monotone ? "" : ` &middot; <b style="color:var(--acryl)">non-monotone</b>`);
 
   $("code").textContent =
     state.params.length === 2
@@ -271,18 +296,22 @@ $("refit").addEventListener("click", () => {
 });
 $<HTMLInputElement>("steps").addEventListener("input", (e) => {
   state.steps = +(e.target as HTMLInputElement).value;
-  $("stepsOut").textContent = String(state.steps);
+  syncSteps(state.steps);
   renderBars();
 });
-$<HTMLSelectElement>("degree").addEventListener("change", (e) => {
-  state.degree = +(e.target as HTMLSelectElement).value as 2 | 3;
-  refit();
-  render();
-});
-$<HTMLSelectElement>("offsetMode").addEventListener("change", (e) => {
-  state.offsetMode = (e.target as HTMLSelectElement).value as "delta" | "ratio" | "off";
-  render();
-});
+document.querySelectorAll<HTMLInputElement>('input[name="degree"]').forEach((radio) =>
+  radio.addEventListener("change", () => {
+    state.degree = +radio.value as 2 | 3;
+    refit();
+    render();
+  }),
+);
+document.querySelectorAll<HTMLInputElement>('input[name="offsetMode"]').forEach((radio) =>
+  radio.addEventListener("change", () => {
+    state.offsetMode = radio.value as "delta" | "ratio" | "off";
+    render();
+  }),
+);
 (["min", "max"] as const).forEach((id) =>
   $<HTMLInputElement>(id).addEventListener("change", () => {
     state.min = +$<HTMLInputElement>("min").value;
