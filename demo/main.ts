@@ -154,11 +154,11 @@ function renderCurve(): void {
     // the acrylic ruler: a translucent band with a sharp drawn edge
     el("path", {
       d: `M0,100 Q${X(px)},${Y(py)} 100,0`,
-      fill: "none", stroke: "var(--acryl-soft)", "stroke-width": 5,
+      fill: "none", stroke: "var(--acryl-soft)", "stroke-width": 3.5,
     }, svg);
     el("path", {
       d: `M0,100 Q${X(px)},${Y(py)} 100,0`,
-      fill: "none", stroke: "var(--acryl)", "stroke-width": 1.2,
+      fill: "none", stroke: "var(--acryl)", "stroke-width": 0.9,
     }, svg);
     el("line", { x1: 0, y1: 100, x2: X(px), y2: Y(py), stroke: "var(--soft)", "stroke-width": 0.5 }, svg);
     el("line", { x1: 100, y1: 0, x2: X(px), y2: Y(py), stroke: "var(--soft)", "stroke-width": 0.5 }, svg);
@@ -174,11 +174,11 @@ function renderCurve(): void {
     // the acrylic ruler: a translucent band with a sharp drawn edge
     el("path", {
       d: `M0,100 C${X(x1)},${Y(y1)} ${X(x2)},${Y(y2)} 100,0`,
-      fill: "none", stroke: "var(--acryl-soft)", "stroke-width": 5,
+      fill: "none", stroke: "var(--acryl-soft)", "stroke-width": 3.5,
     }, svg);
     el("path", {
       d: `M0,100 C${X(x1)},${Y(y1)} ${X(x2)},${Y(y2)} 100,0`,
-      fill: "none", stroke: "var(--acryl)", "stroke-width": 1.2,
+      fill: "none", stroke: "var(--acryl)", "stroke-width": 0.9,
     }, svg);
     el("line", { x1: 0, y1: 100, x2: X(x1), y2: Y(y1), stroke: "var(--soft)", "stroke-width": 0.5 }, svg);
     el("line", { x1: 100, y1: 0, x2: X(x2), y2: Y(y2), stroke: "var(--soft)", "stroke-width": 0.5 }, svg);
