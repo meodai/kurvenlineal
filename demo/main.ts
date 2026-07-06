@@ -220,13 +220,9 @@ function renderBars(): void {
     }, svg);
   });
 
-  // chips: fitted sizes, with original next to it when counts match
-  $("chips").innerHTML = fitted
-    .map((v, i) => {
-      const r = Math.round(v);
-      const orig = steps === data.length ? `<s>${fmt(data[i])}</s>` : "";
-      return `<span class="chip">${r}px${orig}</span>`;
-    })
+  // one label per bar
+  $("barLabels").innerHTML = fitted
+    .map((v) => `<span>${Math.round(v)}px</span>`)
     .join("");
 
   // fit error only meaningful against the data points
