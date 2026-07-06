@@ -220,9 +220,12 @@ function renderBars(): void {
     }, svg);
   });
 
-  // one label per bar
+  // one label per bar: fitted value, original struck through when counts match
   $("barLabels").innerHTML = fitted
-    .map((v) => `<span>${Math.round(v)}px</span>`)
+    .map((v, i) => {
+      const orig = steps === data.length ? ` <s>${fmt(data[i])}</s>` : "";
+      return `<span>${Math.round(v)}${orig}</span>`;
+    })
     .join("");
 
   // fit error only meaningful against the data points
@@ -234,7 +237,7 @@ function renderBars(): void {
   });
   const monotone = fitted.every((v, i) => i === 0 || v >= fitted[i - 1]);
   $("fitInfo").innerHTML =
-    `data n=<b>${data.length}</b> &middot; max fit error <b>${fmt(maxErr)}px</b>` +
+    `data n=<b>${data.length}</b> &middot; max fit error <b>${fmt(maxErr)}</b>` +
     (steps !== data.length ? ` &middot; resampled to <b>${steps}</b> steps` : "") +
     (state.offsetMode !== "off"
       ? ` &middot; offsets <b>${state.offsetMode === "ratio" ? "&times;ratio" : "+delta"}</b>`
