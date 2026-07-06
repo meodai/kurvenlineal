@@ -11,15 +11,25 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
-    "test": "node --test \"test/**/*.test.ts\"",
+    "test": "vitest run",
     "prepublishOnly": "npm run build && npm test"
   },
-  "keywords": ["easing", "bezier", "curve-fitting", "design-tokens", "type-scale", "spacing-scale"],
+  "keywords": [
+    "easing",
+    "bezier",
+    "curve-fitting",
+    "design-tokens",
+    "type-scale",
+    "spacing-scale"
+  ],
   "license": "MIT",
   "devDependencies": {
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.10"
   }
 }
