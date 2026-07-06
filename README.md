@@ -1,4 +1,4 @@
-# kurvenlineal
+# kurvenlineal 📐
 
 Fit a bezier easing to an existing size scale. Hand it the sizes you already
 have — type scale, spacing scale, whatever — and it returns the curve that owns
