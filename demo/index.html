@@ -360,6 +360,21 @@
         font-size: 0.85em;
       }
 
+      /* ---------- color ramp ---------- */
+      .panel--ramp {
+        margin-top: 1.5rem;
+      }
+      .ramp {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        grid-template-rows: 2.5rem 2.5rem;
+        border: 2px solid currentColor;
+      }
+      .ramp i {
+        display: block;
+      }
+
       /* ---------- code ---------- */
       pre {
         margin-top: 3rem;
@@ -619,6 +634,13 @@
           </section>
         </div>
 
+        <section class="panel panel--ramp">
+          <h2>
+            color ramp &middot; lch, random lightness &middot; top input
+            &middot; bottom fitted
+          </h2>
+          <div class="ramp" id="ramp"></div>
+        </section>
       </main>
     </div>
 

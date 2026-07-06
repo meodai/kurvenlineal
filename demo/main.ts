@@ -1,6 +1,7 @@
 import {
   fitQuad,
   fitCubic,
+  fitScale,
   ease,
   elevate,
   toCSS,
@@ -99,6 +100,26 @@ function curveSizes(n: number, raw = false): number[] {
     const r = residualAt(x);
     return offsetMode === "ratio" ? base * r.ratio : base + r.delta;
   });
+}
+
+// ---------- color ramp ----------
+// random lch lightness values, sorted — the fit smooths them into a ramp
+const ramp = { L: [] as number[], c: 50, h: 200 };
+
+function randomRamp(): void {
+  const n = 8 + Math.floor(Math.random() * 5);
+  ramp.c = 20 + Math.random() * 60;
+  ramp.h = Math.random() * 360;
+  ramp.L = Array.from({ length: n }, () => 3 + Math.random() * 94).sort(
+    (a, b) => a - b,
+  );
+}
+
+function renderRamp(): void {
+  const out = fitScale(ramp.L, state.degree).sizes(ramp.L.length);
+  const swatch = (l: number) =>
+    `<i style="background:lch(${Math.round(l * 10) / 10}% ${Math.round(ramp.c)} ${Math.round(ramp.h)})"></i>`;
+  $("ramp").innerHTML = ramp.L.map((l, i) => swatch(l) + swatch(out[i])).join("");
 }
 
 // ---------- render ----------
@@ -323,6 +344,8 @@ $("randomize").addEventListener("click", () => {
   randomSizes();
   refit();
   render();
+  randomRamp();
+  renderRamp();
 });
 $("refit").addEventListener("click", () => {
   refit();
@@ -338,6 +361,7 @@ document.querySelectorAll<HTMLInputElement>('input[name="degree"]').forEach((rad
     state.degree = +radio.value as 2 | 3;
     refit();
     render();
+    renderRamp();
   }),
 );
 document.querySelectorAll<HTMLInputElement>('input[name="offsetMode"]').forEach((radio) =>
@@ -366,3 +390,5 @@ $("copy").addEventListener("click", () =>
 randomSizes();
 refit();
 render();
+randomRamp();
+renderRamp();
