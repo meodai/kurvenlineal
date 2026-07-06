@@ -15,7 +15,10 @@
     "dist"
   ],
   "scripts": {
+    "dev": "vite --config vite.demo.config.ts",
     "build": "vite build && tsc",
+    "build:demo": "vite build --config vite.demo.config.ts",
+    "preview": "vite preview --config vite.demo.config.ts",
     "test": "vitest run",
     "prepublishOnly": "npm run build && npm test"
   },

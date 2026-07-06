@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>scale fitter</title>
+<style>
+  :root {
+    --bg: #ECEDE7;
+    --panel: #FFFFFF;
+    --ink: #1B1C18;
+    --ink-soft: #8A8B84;
+    --gold: #E3B505;
+    --hot: #F04E23;
+    --line: #D8D9D2;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 13px/1.5 ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+    padding: 24px;
+  }
+  header { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+  h1 { font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+  header p { color: var(--ink-soft); }
+
+  .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+  button {
+    font: inherit; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--ink); border-radius: 2px;
+    padding: 6px 12px; cursor: pointer;
+  }
+  button:hover { background: var(--ink); color: var(--panel); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--hot); outline-offset: 2px; }
+  label { display: inline-flex; gap: 6px; align-items: center; color: var(--ink-soft); }
+  input[type="number"], select {
+    font: inherit; padding: 5px 6px;
+    border: 1px solid var(--line); border-radius: 2px; background: var(--panel); color: var(--ink);
+  }
+  input[type="number"] { width: 64px; }
+  input[type="range"] { accent-color: var(--ink); }
+
+  .stage { display: grid; grid-template-columns: 360px 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 760px) { .stage { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 12px; }
+  .panel h2 {
+    font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-soft); margin-bottom: 8px;
+  }
+  svg { display: block; width: 100%; height: auto; touch-action: none; }
+
+  .readout { margin-top: 8px; color: var(--ink-soft); }
+  .readout b { color: var(--ink); font-weight: 600; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip {
+    border: 1px solid var(--line); border-radius: 2px; padding: 3px 7px; background: var(--panel);
+  }
+  .chip s { text-decoration: none; color: var(--ink-soft); font-size: 11px; margin-left: 5px; }
+
+  pre {
+    margin-top: 16px; background: var(--ink); color: var(--bg);
+    padding: 14px; border-radius: 3px; overflow-x: auto; position: relative;
+  }
+  pre button {
+    position: absolute; top: 8px; right: 8px;
+    background: transparent; color: var(--bg); border-color: var(--ink-soft); font-size: 11px; padding: 3px 8px;
+  }
+  pre button:hover { background: var(--bg); color: var(--ink); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>scale fitter</h1>
+  <p>random sizes &rarr; sort &rarr; fit a cubic &rarr; the curve owns the scale</p>
+</header>
+
+<div class="controls">
+  <button id="randomize">Randomize sizes</button>
+  <button id="refit">Refit curve to data</button>
+  <label>min <input id="min" type="number" step="1" value="4"></label>
+  <label>max <input id="max" type="number" step="1" value="96"></label>
+  <label>steps <input id="steps" type="range" min="3" max="24" value="12"> <span id="stepsOut">12</span></label>
+  <label>degree <select id="degree">
+    <option value="3">3 &middot; two handles</option>
+    <option value="2">2 &middot; one handle</option>
+  </select></label>
+  <label>offsets <select id="offsetMode">
+    <option value="delta">+delta</option>
+    <option value="ratio">&times;ratio</option>
+    <option value="off">off</option>
+  </select></label>
+</div>
+
+<div class="stage">
+  <div class="panel">
+    <h2>curve &middot; drag handles</h2>
+    <svg id="curve" viewBox="0 0 100 100" aria-label="Easing curve editor"></svg>
+    <div class="readout" id="curveInfo"></div>
+  </div>
+  <div class="panel">
+    <h2>sizes &middot; <span style="color:var(--gold)">&#9632;</span> output &middot; <span style="color:var(--ink)">&#9633;</span> on curve</h2>
+    <svg id="bars" viewBox="0 0 100 46" preserveAspectRatio="none" style="height:220px" aria-label="Size comparison bars"></svg>
+    <div class="chips" id="chips"></div>
+    <div class="readout" id="fitInfo"></div>
+  </div>
+</div>
+
+<pre id="codeWrap"><button id="copy">copy</button><code id="code"></code></pre>
+
+<script type="module" src="./main.ts"></script>
+</body>
+</html>
