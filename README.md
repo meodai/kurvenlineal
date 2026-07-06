@@ -43,6 +43,16 @@ endpoints included). `ease(x, curve)` evaluates either degree. `elevate(quad)`
 is the exact degree elevation `(⅔Q, ⅓ + ⅔Q)`; `toCSS(curve)` always emits a
 valid `cubic-bezier()`.
 
+The bezier primitives underneath are exported too, endpoints always fixed at
+0 and 1:
+
+- `bernstein2(t, a)` / `bernstein3(t, a1, a2)` — one axis of the curve at
+  parameter `t`. Pass the control point's x to get `x(t)`, its y to get
+  `y(t)`; `ease` is just `bernstein(solveT(x), …)` on the y axis.
+- `solveT2(x, px)` / `solveT3(x, x1, x2)` — invert the x axis: the `t` at
+  which `x(t) = x`. Closed form for the quad; newton with a bisection
+  fallback for the cubic.
+
 ## fitting notes
 
 - **Degree 2**: `x(t)` is quadratic, so `t(x)` has a closed form and for any

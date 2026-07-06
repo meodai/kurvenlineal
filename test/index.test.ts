@@ -7,13 +7,16 @@ import {
   ease,
   elevate,
   toCSS,
+  bernstein2,
+  bernstein3,
+  solveT2,
+  solveT3,
   type Quad,
   type Cubic,
 } from "../src/index.ts";
 
-const qb = (t: number, a: number) => 2 * t * (1 - t) * a + t * t;
-const cbz = (t: number, a1: number, a2: number) =>
-  3 * t * (1 - t) ** 2 * a1 + 3 * t * t * (1 - t) * a2 + t ** 3;
+const qb = bernstein2;
+const cbz = bernstein3;
 
 test("fitQuad recovers a known control point exactly", () => {
   const Q: Quad = [0.7, 0.2];
@@ -43,6 +46,17 @@ test("fitCubic reproduces a polynomial easing to near-zero error", () => {
   for (let i = 0; i <= 24; i++) {
     const x = i / 24;
     assert.ok(Math.abs(ease(x, fit) - cbz(x, C[1], C[3])) < 1e-4);
+  }
+});
+
+test("solveT2/solveT3 invert bernstein2/bernstein3 on the x axis", () => {
+  for (let run = 0; run < 50; run++) {
+    const t = Math.random();
+    const px = Math.random();
+    assert.ok(Math.abs(solveT2(bernstein2(t, px), px) - t) < 1e-6);
+    const x1 = Math.random();
+    const x2 = Math.random();
+    assert.ok(Math.abs(solveT3(bernstein3(t, x1, x2), x1, x2) - t) < 1e-5);
   }
 });
 

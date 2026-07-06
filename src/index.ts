@@ -16,36 +16,40 @@ export type OffsetMode = "delta" | "ratio" | "off";
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
-// bernstein evaluation, endpoints fixed at 0 and 1
-const qb = (t: number, a: number) => 2 * t * (1 - t) * a + t * t;
-const cb = (t: number, a1: number, a2: number) =>
+/** one axis of a quadratic bezier at t, endpoints fixed at 0 and 1 — pass the control's x for x(t), its y for y(t) */
+export const bernstein2 = (t: number, a: number): number =>
+  2 * t * (1 - t) * a + t * t;
+
+/** one axis of a cubic bezier at t, endpoints fixed at 0 and 1 */
+export const bernstein3 = (t: number, a1: number, a2: number): number =>
   3 * t * (1 - t) ** 2 * a1 + 3 * t * t * (1 - t) * a2 + t ** 3;
+
 const dcb = (t: number, a1: number, a2: number) =>
   3 * (1 - t) ** 2 * a1 + 6 * t * (1 - t) * (a2 - a1) + 3 * t * t * (1 - a2);
 
-// invert x(t) = x — closed form for degree 2
-const qT = (x: number, px: number): number => {
+/** invert x(t) = x for a quadratic — closed form */
+export const solveT2 = (x: number, px: number): number => {
   const k = 1 - 2 * px;
   if (Math.abs(k) < 1e-9) return x;
   return clamp01((-px + Math.sqrt(px * px + k * x)) / k);
 };
 
-// newton with bisection fallback for degree 3 (x(t) is monotone for x1,x2 ∈ [0,1])
-const cT = (x: number, x1: number, x2: number): number => {
+/** invert x(t) = x for a cubic — newton with bisection fallback (x(t) is monotone for x1,x2 ∈ [0,1]) */
+export const solveT3 = (x: number, x1: number, x2: number): number => {
   let t = x;
   for (let i = 0; i < 12; i++) {
-    const err = cb(t, x1, x2) - x;
+    const err = bernstein3(t, x1, x2) - x;
     if (Math.abs(err) < 1e-12) return t;
     const slope = dcb(t, x1, x2);
     if (Math.abs(slope) < 1e-9) break;
     t = clamp01(t - err / slope);
   }
-  if (Math.abs(cb(t, x1, x2) - x) < 1e-6) return t;
+  if (Math.abs(bernstein3(t, x1, x2) - x) < 1e-6) return t;
   let lo = 0;
   let hi = 1;
   for (let i = 0; i < 32; i++) {
     t = (lo + hi) / 2;
-    if (cb(t, x1, x2) < x) lo = t;
+    if (bernstein3(t, x1, x2) < x) lo = t;
     else hi = t;
   }
   return t;
@@ -54,8 +58,8 @@ const cT = (x: number, x1: number, x2: number): number => {
 /** evaluate the easing y(x) for x ∈ [0,1] */
 export const ease = (x: number, curve: Curve): number =>
   curve.length === 2
-    ? qb(qT(clamp01(x), curve[0]), curve[1])
-    : cb(cT(clamp01(x), curve[0], curve[2]), curve[1], curve[3]);
+    ? bernstein2(solveT2(clamp01(x), curve[0]), curve[1])
+    : bernstein3(solveT3(clamp01(x), curve[0], curve[2]), curve[1], curve[3]);
 
 /** exact degree elevation: quad Q → cubic (⅔Q, ⅓ + ⅔Q) */
 export const elevate = ([px, py]: Quad): Cubic => [
@@ -80,7 +84,7 @@ export const toCSS = (curve: Curve): string => {
  */
 export function fitQuad(xs: readonly number[], ys: readonly number[]): Quad {
   const evalPx = (px: number) => {
-    const ts = xs.map((x) => qT(x, px));
+    const ts = xs.map((x) => solveT2(x, px));
     let a = 0;
     let ry = 0;
     for (let i = 0; i < ts.length; i++) {
@@ -90,7 +94,7 @@ export function fitQuad(xs: readonly number[], ys: readonly number[]): Quad {
     }
     const py = a > 1e-12 ? clamp01(ry / a) : 0.5;
     let sse = 0;
-    for (let i = 0; i < ts.length; i++) sse += (qb(ts[i], py) - ys[i]) ** 2;
+    for (let i = 0; i < ts.length; i++) sse += (bernstein2(ts[i], py) - ys[i]) ** 2;
     return { py, sse };
   };
   let lo = 0;
@@ -151,7 +155,7 @@ export function fitCubic(
       p2 = [clamp01((rx2 * a11 - rx1 * a12) / det), clamp01((ry2 * a11 - ry1 * a12) / det)];
       for (let i = 0; i < t.length; i++) {
         for (let k = 0; k < 4; k++) {
-          const err = cb(t[i], p1[0], p2[0]) - xs[i];
+          const err = bernstein3(t[i], p1[0], p2[0]) - xs[i];
           const slope = dcb(t[i], p1[0], p2[0]);
           if (Math.abs(slope) < 1e-9) break;
           t[i] = clamp01(t[i] - err / slope);
@@ -170,7 +174,7 @@ export function fitCubic(
   const candidates: Cubic[] = [
     solve(xs),
     elevate(quad),
-    solve(xs.map((x) => qT(x, quad[0]))),
+    solve(xs.map((x) => solveT2(x, quad[0]))),
   ];
   return candidates.reduce((a, b) => (maxErr(b) < maxErr(a) ? b : a));
 }
