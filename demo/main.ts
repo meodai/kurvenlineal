@@ -498,6 +498,10 @@ $("randomize").addEventListener("click", () => {
   randomRamp();
   renderRamp();
 });
+$("ramp").addEventListener("click", () => {
+  randomRamp();
+  renderRamp();
+});
 $("refit").addEventListener("click", () => {
   refit();
   render();
