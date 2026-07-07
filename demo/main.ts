@@ -19,8 +19,8 @@ interface Residual {
 }
 
 const state = {
-  data: [] as number[],       // sorted raw sizes (the "existing design system")
-  degree: 3 as 2 | 3,         // 2 = quad (one handle) | 3 = cubic
+  data: [] as number[], // sorted raw sizes (the "existing design system")
+  degree: 3 as 2 | 3, // 2 = quad (one handle) | 3 = cubic
   params: [1 / 3, 1 / 3, 2 / 3, 2 / 3] as number[],
   residuals: [] as Residual[], // per-point deviation from the curve, captured at refit
   offsetMode: "delta" as "delta" | "ratio" | "off",
@@ -55,7 +55,8 @@ function syncSteps(n: number): void {
   const input = $<HTMLInputElement>("steps");
   input.value = String(n);
   $("stepsOut").textContent = String(n);
-  const progress = (n - Number(input.min)) / (Number(input.max) - Number(input.min));
+  const progress =
+    (n - Number(input.min)) / (Number(input.max) - Number(input.min));
   (document.querySelector(".range-marker") as HTMLElement).style.setProperty(
     "--progress",
     String(progress),
@@ -66,7 +67,8 @@ function refit(): void {
   const { data, min, max } = state;
   const xs = data.map((_, i) => i / (data.length - 1));
   const ys = data.map((v) => (v - min) / (max - min));
-  state.params = state.degree === 2 ? [...fitQuad(xs, ys)] : [...fitCubic(xs, ys)];
+  state.params =
+    state.degree === 2 ? [...fitQuad(xs, ys)] : [...fitCubic(xs, ys)];
   // freeze each point's deviation from the curve — it rides along from now on
   state.residuals = data.map((v, i) => {
     const base = min + ease(xs[i], curve()) * (max - min);
@@ -119,7 +121,9 @@ function renderRamp(): void {
   const out = fitScale(ramp.L, state.degree).sizes(ramp.L.length);
   const swatch = (l: number) =>
     `<i style="background:lch(${Math.round(l * 10) / 10}% ${Math.round(ramp.c)} ${Math.round(ramp.h)})"></i>`;
-  $("ramp").innerHTML = ramp.L.map((l, i) => swatch(l) + swatch(out[i])).join("");
+  $("ramp").innerHTML = ramp.L.map((l, i) => swatch(l) + swatch(out[i])).join(
+    "",
+  );
 }
 
 // ---------- render ----------
@@ -144,19 +148,47 @@ function renderCurve(): void {
   const X = (v: number) => v * 100;
   const Y = (v: number) => 100 - v * 100;
 
-  el("rect", {
-    x: 0, y: 0, width: 100, height: 100, fill: "none", stroke: "var(--line)",
-    "stroke-width": 1, "vector-effect": "non-scaling-stroke",
-  }, svg);
+  el(
+    "rect",
+    {
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      fill: "none",
+      stroke: "var(--line)",
+      "stroke-width": 1,
+      "vector-effect": "non-scaling-stroke",
+    },
+    svg,
+  );
   for (const q of [25, 50, 75]) {
-    el("line", {
-      x1: q, y1: 0, x2: q, y2: 100, stroke: "var(--line)",
-      "stroke-width": 1, "vector-effect": "non-scaling-stroke",
-    }, svg);
-    el("line", {
-      x1: 0, y1: q, x2: 100, y2: q, stroke: "var(--line)",
-      "stroke-width": 1, "vector-effect": "non-scaling-stroke",
-    }, svg);
+    el(
+      "line",
+      {
+        x1: q,
+        y1: 0,
+        x2: q,
+        y2: 100,
+        stroke: "var(--line)",
+        "stroke-width": 1,
+        "vector-effect": "non-scaling-stroke",
+      },
+      svg,
+    );
+    el(
+      "line",
+      {
+        x1: 0,
+        y1: q,
+        x2: 100,
+        y2: q,
+        stroke: "var(--line)",
+        "stroke-width": 1,
+        "vector-effect": "non-scaling-stroke",
+      },
+      svg,
+    );
   }
   // data points (frozen, gold) and where they live now (ink, riding the curve)
   const { data, min, max } = state;
@@ -167,85 +199,195 @@ function renderCurve(): void {
     const y0 = Y((v - min) / span);
     const y1p = Y((now[i] - min) / span);
     if (Math.abs(y1p - y0) > 0.75)
-      el("line", {
-        x1: x, y1: y0, x2: x, y2: y1p,
-        stroke: "var(--soft)", "stroke-width": 1, "stroke-dasharray": "1.5 1.5",
-        "vector-effect": "non-scaling-stroke",
-      }, svg);
+      el(
+        "line",
+        {
+          x1: x,
+          y1: y0,
+          x2: x,
+          y2: y1p,
+          stroke: "var(--soft)",
+          "stroke-width": 1,
+          "stroke-dasharray": "1.5 1.5",
+          "vector-effect": "non-scaling-stroke",
+        },
+        svg,
+      );
   });
   data.forEach((v, i) =>
-    el("circle", {
-      cx: X(i / (data.length - 1)),
-      cy: Y((v - min) / span),
-      r: 1.6, fill: "var(--text)",
-    }, svg),
+    el(
+      "circle",
+      {
+        cx: X(i / (data.length - 1)),
+        cy: Y((v - min) / span),
+        r: 1.2,
+        fill: "none",
+        stroke: "var(--text)",
+        "stroke-width": 1,
+        "vector-effect": "non-scaling-stroke",
+      },
+      svg,
+    ),
   );
   now.forEach((v, i) =>
-    el("circle", {
-      cx: X(i / (data.length - 1)),
-      cy: Y((v - min) / span),
-      r: 1, fill: "var(--acryl)",
-    }, svg),
+    el(
+      "circle",
+      {
+        cx: X(i / (data.length - 1)),
+        cy: Y((v - min) / span),
+        r: 1,
+        fill: "var(--acryl)",
+      },
+      svg,
+    ),
   );
   // curve + arms + handles
   if (state.params.length === 2) {
     const [px, py] = state.params;
     // the acrylic ruler: a translucent band with a sharp drawn edge
-    el("path", {
-      d: `M0,100 Q${X(px)},${Y(py)} 100,0`,
-      fill: "none", stroke: "var(--acryl-soft)", "stroke-width": 7,
-      "vector-effect": "non-scaling-stroke",
-    }, svg);
-    el("path", {
-      d: `M0,100 Q${X(px)},${Y(py)} 100,0`,
-      fill: "none", stroke: "var(--acryl)", "stroke-width": 1.5,
-      "vector-effect": "non-scaling-stroke",
-    }, svg);
-    el("line", {
-      x1: 0, y1: 100, x2: X(px), y2: Y(py), stroke: "var(--soft)",
-      "stroke-width": 1, "vector-effect": "non-scaling-stroke",
-    }, svg);
-    el("line", {
-      x1: 100, y1: 0, x2: X(px), y2: Y(py), stroke: "var(--soft)",
-      "stroke-width": 1, "vector-effect": "non-scaling-stroke",
-    }, svg);
-    el("circle", {
-      cx: X(px), cy: Y(py), r: 3.4, fill: "var(--bg)", stroke: "var(--text)",
-      "stroke-width": 1.5, "vector-effect": "non-scaling-stroke",
-      "data-handle": 0, style: "cursor:grab",
-    }, svg);
+    el(
+      "path",
+      {
+        d: `M0,100 Q${X(px)},${Y(py)} 100,0`,
+        fill: "none",
+        stroke: "var(--acryl-soft)",
+        "stroke-width": 7,
+        "vector-effect": "non-scaling-stroke",
+      },
+      svg,
+    );
+    el(
+      "path",
+      {
+        d: `M0,100 Q${X(px)},${Y(py)} 100,0`,
+        fill: "none",
+        stroke: "var(--acryl)",
+        "stroke-width": 1.5,
+        "vector-effect": "non-scaling-stroke",
+      },
+      svg,
+    );
+    el(
+      "line",
+      {
+        x1: 0,
+        y1: 100,
+        x2: X(px),
+        y2: Y(py),
+        stroke: "var(--soft)",
+        "stroke-width": 1,
+        "vector-effect": "non-scaling-stroke",
+      },
+      svg,
+    );
+    el(
+      "line",
+      {
+        x1: 100,
+        y1: 0,
+        x2: X(px),
+        y2: Y(py),
+        stroke: "var(--soft)",
+        "stroke-width": 1,
+        "vector-effect": "non-scaling-stroke",
+      },
+      svg,
+    );
+    el(
+      "circle",
+      {
+        cx: X(px),
+        cy: Y(py),
+        r: 3.4,
+        fill: "var(--bg)",
+        stroke: "var(--text)",
+        "stroke-width": 1.5,
+        "vector-effect": "non-scaling-stroke",
+        "data-handle": 0,
+        style: "cursor:grab",
+      },
+      svg,
+    );
     $("curveInfo").innerHTML =
       `Q(<b>${state.params.map(fmt).join(", ")}</b>) &middot; ` +
-      `&equiv; cubic-bezier(${elevate(curve() as Quad).map(fmt).join(", ")})`;
+      `&equiv; cubic-bezier(${elevate(curve() as Quad)
+        .map(fmt)
+        .join(", ")})`;
   } else {
     const [x1, y1, x2, y2] = state.params;
     // the acrylic ruler: a translucent band with a sharp drawn edge
-    el("path", {
-      d: `M0,100 C${X(x1)},${Y(y1)} ${X(x2)},${Y(y2)} 100,0`,
-      fill: "none", stroke: "var(--acryl-soft)", "stroke-width": 7,
-      "vector-effect": "non-scaling-stroke",
-    }, svg);
-    el("path", {
-      d: `M0,100 C${X(x1)},${Y(y1)} ${X(x2)},${Y(y2)} 100,0`,
-      fill: "none", stroke: "var(--acryl)", "stroke-width": 1.5,
-      "vector-effect": "non-scaling-stroke",
-    }, svg);
-    el("line", {
-      x1: 0, y1: 100, x2: X(x1), y2: Y(y1), stroke: "var(--soft)",
-      "stroke-width": 1, "vector-effect": "non-scaling-stroke",
-    }, svg);
-    el("line", {
-      x1: 100, y1: 0, x2: X(x2), y2: Y(y2), stroke: "var(--soft)",
-      "stroke-width": 1, "vector-effect": "non-scaling-stroke",
-    }, svg);
-    ([[x1, y1, 0], [x2, y2, 1]] as const).forEach(([hx, hy, idx]) => {
-      el("circle", {
-        cx: X(hx), cy: Y(hy), r: 3.4, fill: "var(--bg)", stroke: "var(--text)",
-        "stroke-width": 1.5, "vector-effect": "non-scaling-stroke",
-        "data-handle": idx, style: "cursor:grab",
-      }, svg);
+    el(
+      "path",
+      {
+        d: `M0,100 C${X(x1)},${Y(y1)} ${X(x2)},${Y(y2)} 100,0`,
+        fill: "none",
+        stroke: "var(--acryl-soft)",
+        "stroke-width": 7,
+        "vector-effect": "non-scaling-stroke",
+      },
+      svg,
+    );
+    el(
+      "path",
+      {
+        d: `M0,100 C${X(x1)},${Y(y1)} ${X(x2)},${Y(y2)} 100,0`,
+        fill: "none",
+        stroke: "var(--acryl)",
+        "stroke-width": 1.5,
+        "vector-effect": "non-scaling-stroke",
+      },
+      svg,
+    );
+    el(
+      "line",
+      {
+        x1: 0,
+        y1: 100,
+        x2: X(x1),
+        y2: Y(y1),
+        stroke: "var(--soft)",
+        "stroke-width": 1,
+        "vector-effect": "non-scaling-stroke",
+      },
+      svg,
+    );
+    el(
+      "line",
+      {
+        x1: 100,
+        y1: 0,
+        x2: X(x2),
+        y2: Y(y2),
+        stroke: "var(--soft)",
+        "stroke-width": 1,
+        "vector-effect": "non-scaling-stroke",
+      },
+      svg,
+    );
+    (
+      [
+        [x1, y1, 0],
+        [x2, y2, 1],
+      ] as const
+    ).forEach(([hx, hy, idx]) => {
+      el(
+        "circle",
+        {
+          cx: X(hx),
+          cy: Y(hy),
+          r: 3.4,
+          fill: "var(--bg)",
+          stroke: "var(--text)",
+          "stroke-width": 1.5,
+          "vector-effect": "non-scaling-stroke",
+          "data-handle": idx,
+          style: "cursor:grab",
+        },
+        svg,
+      );
     });
-    $("curveInfo").innerHTML = `cubic-bezier(<b>${state.params.map(fmt).join(", ")}</b>)`;
+    $("curveInfo").innerHTML =
+      `cubic-bezier(<b>${state.params.map(fmt).join(", ")}</b>)`;
   }
 }
 
@@ -261,27 +403,46 @@ function renderBars(): void {
   const wf = 100 / steps;
   fitted.forEach((v, i) => {
     const h = (v / max) * (H - 2);
-    el("rect", {
-      x: i * wf + 0.5, y: H - h, width: wf - 1, height: h,
-      fill: "var(--acryl-soft)", stroke: "var(--acryl)", "stroke-width": 0.5,
-      "vector-effect": "non-scaling-stroke",
-    }, svg);
+    el(
+      "rect",
+      {
+        x: i * wf + 0.5,
+        y: H - h,
+        width: wf - 1,
+        height: h,
+        fill: "var(--acryl-soft)",
+        stroke: "var(--acryl)",
+        "stroke-width": 0.5,
+        "vector-effect": "non-scaling-stroke",
+      },
+      svg,
+    );
   });
   // where each step would land if it sat exactly on the bezier, ink outline
   onCurve.forEach((v, i) => {
     const h = (v / max) * (H - 2);
-    el("rect", {
-      x: i * wf + 0.5, y: H - h, width: wf - 1, height: h,
-      fill: "none", stroke: "var(--text)", "stroke-width": 0.5,
-      "vector-effect": "non-scaling-stroke",
-    }, svg);
+    el(
+      "rect",
+      {
+        x: i * wf + 0.5,
+        y: H - h,
+        width: wf - 1,
+        height: h,
+        fill: "none",
+        stroke: "var(--text)",
+        "stroke-width": 0.5,
+        "vector-effect": "non-scaling-stroke",
+      },
+      svg,
+    );
   });
 
   // one label per bar: fitted value, original struck through when counts match
   $("barLabels").innerHTML = fitted
     .map((v, i) => {
-      const orig = steps === data.length ? ` <s>${fmt(data[i])}</s>` : "";
-      return `<span>${Math.round(v)}${orig}</span>`;
+      const value = String(Math.round(v));
+      const showOrig = steps === data.length && fmt(data[i]) !== value;
+      return `<span>${value}${showOrig ? ` <s>${fmt(data[i])}</s>` : ""}</span>`;
     })
     .join("");
 
@@ -295,11 +456,15 @@ function renderBars(): void {
   const monotone = fitted.every((v, i) => i === 0 || v >= fitted[i - 1]);
   $("fitInfo").innerHTML =
     `data n=<b>${data.length}</b> &middot; max fit error <b>${fmt(maxErr)}</b>` +
-    (steps !== data.length ? ` &middot; resampled to <b>${steps}</b> steps` : "") +
+    (steps !== data.length
+      ? ` &middot; resampled to <b>${steps}</b> steps`
+      : "") +
     (state.offsetMode !== "off"
       ? ` &middot; offsets <b>${state.offsetMode === "ratio" ? "&times;ratio" : "+delta"}</b>`
       : "") +
-    (monotone ? "" : ` &middot; <b style="color:var(--acryl)">non-monotone</b>`);
+    (monotone
+      ? ""
+      : ` &middot; <b style="color:var(--acryl)">non-monotone</b>`);
 
   const degreeArg = state.degree === 2 ? ", 2" : "";
   const offsetArg = state.offsetMode === "off" ? "" : `, "${state.offsetMode}"`;
@@ -356,20 +521,24 @@ $<HTMLInputElement>("steps").addEventListener("input", (e) => {
   syncSteps(state.steps);
   renderBars();
 });
-document.querySelectorAll<HTMLInputElement>('input[name="degree"]').forEach((radio) =>
-  radio.addEventListener("change", () => {
-    state.degree = +radio.value as 2 | 3;
-    refit();
-    render();
-    renderRamp();
-  }),
-);
-document.querySelectorAll<HTMLInputElement>('input[name="offsetMode"]').forEach((radio) =>
-  radio.addEventListener("change", () => {
-    state.offsetMode = radio.value as "delta" | "ratio" | "off";
-    render();
-  }),
-);
+document
+  .querySelectorAll<HTMLInputElement>('input[name="degree"]')
+  .forEach((radio) =>
+    radio.addEventListener("change", () => {
+      state.degree = +radio.value as 2 | 3;
+      refit();
+      render();
+      renderRamp();
+    }),
+  );
+document
+  .querySelectorAll<HTMLInputElement>('input[name="offsetMode"]')
+  .forEach((radio) =>
+    radio.addEventListener("change", () => {
+      state.offsetMode = radio.value as "delta" | "ratio" | "off";
+      render();
+    }),
+  );
 (["min", "max"] as const).forEach((id) =>
   $<HTMLInputElement>(id).addEventListener("change", () => {
     state.min = +$<HTMLInputElement>("min").value;
