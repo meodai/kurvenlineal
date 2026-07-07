@@ -298,7 +298,7 @@ function renderCurve(): void {
       {
         cx: X(px),
         cy: Y(py),
-        r: 3.4,
+        r: 2.5,
         fill: "var(--bg)",
         stroke: "var(--text)",
         "stroke-width": 1.5,
@@ -371,7 +371,7 @@ function renderCurve(): void {
         {
           cx: X(hx),
           cy: Y(hy),
-          r: 3.4,
+          r: 2.5,
           fill: "var(--bg)",
           stroke: "var(--text)",
           "stroke-width": 1.5,
