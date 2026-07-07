@@ -30,9 +30,10 @@
         --soft: color-mix(in lab, currentColor 55%, var(--bg));
 
         /* the acrylic of a real Kurvenlineal: fluorescent orange, translucent */
-        --acryl: #ff5a26;
+        --acryl: turquoise;
         --acryl-soft: color-mix(in srgb, var(--acryl) 20%, transparent);
 
+        --max-width-content: 40rem;
         --dotSize: 0.75rem;
         --ease: cubic-bezier(0.3, 0.7, 0, 1);
 
@@ -52,6 +53,12 @@
       * {
         box-sizing: border-box;
         margin: 0;
+      }
+
+      h1, h2, h3, h4, h5, h6 {
+        font-family: "Astloch", cursive;
+        font-weight: 200;
+        letter-spacing: -0.04em;
       }
 
       body {
@@ -81,19 +88,14 @@
 
       .demo__header {
         margin-bottom: 2rem;
+        text-align: center;
       }
 
       .demo__title {
-        font-family: "Astloch", cursive;
-        font-size: 3rem;
-        font-weight: 700;
-        letter-spacing: 0;
-        line-height: 1.1;
+        font-size: clamp(2rem, 10vw, 20rem);
+        margin-bottom: -0.25em;
       }
 
-      .demo__subtitle {
-        color: var(--soft);
-      }
 
       /* ---------- controls ---------- */
       .demo__controls {
@@ -126,7 +128,7 @@
         background: var(--bg);
         color: inherit;
         padding: 0.35rem 0.5rem;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         width: 5rem;
       }
       .control__input:focus-visible {
@@ -135,7 +137,7 @@
 
       .button {
         font: inherit;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         padding: 0.46rem 0.9rem;
         background: var(--bg);
         color: inherit;
@@ -171,6 +173,13 @@
           margin-left: -2px;
         }
 
+      }
+
+      .control--minmax {
+        flex-direction: row;
+        .control + .control {
+          margin-left: -2px;
+        }
       }
 
       /* steps: a ruler — the instrument's own graduations */
@@ -428,7 +437,7 @@
 
       /* ---------- about ---------- */
       .about {
-        max-width: 40rem;
+        max-width: var(--max-width-content, 40rem);
         margin: 5vmin auto;
         padding: 0 1.5rem;
         font-size: 0.9rem;
@@ -436,14 +445,13 @@
       }
       .about h1,
       .about h2 {
-        font-family: "Astloch", cursive;
-        font-weight: 700;
-        letter-spacing: 0;
+        letter-spacing: -0.04em;
       }
       .about h1 {
-        font-size: 2.5rem;
+        font-size: clamp(2rem, 4vw, 4rem);
       }
       .about h2 {
+        font-size: clamp(1.5rem, 3vw, 2.5rem);
         margin-top: 2em;
         margin-bottom: 0.5em;
       }
@@ -506,25 +514,27 @@
             <button id="randomize" class="button">Randomize sizes</button>
             <button id="refit" class="button">Refit curve</button>
           </div>
-          <div class="control">
-            <label class="control__label" for="min">min</label>
-            <input
-              id="min"
-              class="control__input"
-              type="number"
-              step="1"
-              value="4"
-            />
-          </div>
-          <div class="control">
-            <label class="control__label" for="max">max</label>
-            <input
-              id="max"
-              class="control__input"
-              type="number"
-              step="1"
-              value="96"
-            />
+          <div class="control control--minmax">
+            <div class="control">
+              <label class="control__label" for="min">min</label>
+              <input
+                id="min"
+                class="control__input"
+                type="number"
+                step="1"
+                value="4"
+              />
+            </div>
+            <div class="control">
+              <label class="control__label" for="max">max</label>
+              <input
+                id="max"
+                class="control__input"
+                type="number"
+                step="1"
+                value="96"
+              />
+            </div>
           </div>
           <div class="control control--steps">
             <label class="control__label" for="steps"
