@@ -440,9 +440,9 @@ function renderBars(): void {
   // one label per bar: fitted value, original struck through when counts match
   $("barLabels").innerHTML = fitted
     .map((v, i) => {
-      const value = String(Math.round(v));
-      const showOrig = steps === data.length && fmt(data[i]) !== value;
-      return `<span>${value}${showOrig ? ` <s>${fmt(data[i])}</s>` : ""}</span>`;
+      // strike the original only when the fitted value actually moved it
+      const showOrig = steps === data.length && Math.abs(v - data[i]) > 0.005;
+      return `<span>${fmt(v)}${showOrig ? ` <s>${fmt(data[i])}</s>` : ""}</span>`;
     })
     .join("");
 
