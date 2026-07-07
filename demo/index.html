@@ -309,6 +309,12 @@
         color: var(--soft);
         margin-bottom: 0.5rem;
       }
+      .panel__head--split {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 1rem;
+      }
       .panel h2 b {
         font-weight: 700;
         color: var(--text);
@@ -613,13 +619,14 @@
 
         <div class="stage">
           <section class="panel">
-            <h2>curve &middot; drag handles</h2>
+            <h2 class="panel__head--split">
+              curve <span id="curveInfo"></span>
+            </h2>
             <svg
               id="curve"
               viewBox="0 0 100 100"
               aria-label="Easing curve editor"
             ></svg>
-            <div class="readout" id="curveInfo"></div>
           </section>
           <section class="panel">
             <h2>
