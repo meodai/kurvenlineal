@@ -50,6 +50,28 @@
         color: var(--bg);
       }
 
+      /* scrollbars: bg track, fg handle — inverted inside the code block */
+      html {
+        scrollbar-color: var(--text) var(--bg);
+      }
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+        background: var(--bg);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--text);
+      }
+      pre {
+        scrollbar-color: var(--bg) var(--text);
+      }
+      pre::-webkit-scrollbar {
+        background: var(--text);
+      }
+      pre::-webkit-scrollbar-thumb {
+        background: var(--bg);
+      }
+
       * {
         box-sizing: border-box;
         margin: 0;
@@ -87,6 +109,7 @@
         width: min(64rem, 92vw);
         padding: 1.5rem;
         border: 2px solid currentColor;
+        border-bottom-width: 4px;
       }
 
       .demo__header {
@@ -95,11 +118,11 @@
       }
 
       .demo__title {
-        margin-top: -0.9em;
+        margin-top: calc(-.78em - 1.5rem);
         font-size: clamp(2rem, 10vw, 20rem);
         margin-bottom: -0.25em;
         /* bg halo around the glyphs; stroke paints under the fill so it only shows outside */
-        -webkit-text-stroke: 0.1em var(--bg);
+        -webkit-text-stroke: 0.2em var(--bg);
         paint-order: stroke fill;
       }
 
