@@ -438,11 +438,12 @@ function renderBars(): void {
   });
 
   // one label per bar: fitted value, original struck through when counts match
+  // per bar: the on-curve value, plus the given value struck through —
+  // but only when the curve actually moved it
   $("barLabels").innerHTML = fitted
     .map((v, i) => {
-      // strike the original only when the fitted value actually moved it
-      const showOrig = steps === data.length && Math.abs(v - data[i]) > 0.005;
-      return `<span>${fmt(v)}${showOrig ? ` <s>${fmt(data[i])}</s>` : ""}</span>`;
+      const moved = Math.abs(v - onCurve[i]) > 0.005;
+      return `<span>${fmt(onCurve[i])}${moved ? ` <s>${fmt(v)}</s>` : ""}</span>`;
     })
     .join("");
 
