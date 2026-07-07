@@ -3,10 +3,8 @@ import {
   fitCubic,
   fitScale,
   ease,
-  elevate,
   toCSS,
   type Curve,
-  type Quad,
 } from "../src/index.ts";
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -310,11 +308,7 @@ function renderCurve(): void {
       },
       svg,
     );
-    $("curveInfo").innerHTML =
-      `Q(<b>${state.params.map(fmt).join(", ")}</b>) &middot; ` +
-      `&equiv; cubic-bezier(${elevate(curve() as Quad)
-        .map(fmt)
-        .join(", ")})`;
+    $("curveInfo").innerHTML = `Q(<b>${state.params.map(fmt).join(", ")}</b>)`;
   } else {
     const [x1, y1, x2, y2] = state.params;
     // the acrylic ruler: a translucent band with a sharp drawn edge
