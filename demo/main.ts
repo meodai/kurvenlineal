@@ -41,11 +41,13 @@ function randomSizes(): void {
   const sizes = Array.from({ length: n }, (_, i) => {
     const t = i / (n - 1);
     const jitter = 1 + (Math.random() - 0.5) * 0.35;
-    return min + (max - min) * Math.pow(t, exp) * jitter;
+    // jitter must not escape [min, max], or the sorted extremes drift off the fields
+    return Math.min(max, Math.max(min, min + (max - min) * Math.pow(t, exp) * jitter));
   });
+  sizes.sort((a, b) => a - b);
   sizes[0] = min;
   sizes[n - 1] = max;
-  state.data = sizes.sort((a, b) => a - b).map((v) => Math.round(v * 2) / 2);
+  state.data = sizes.map((v) => Math.round(v * 2) / 2);
   state.steps = n; // 1:1 with the data until the user resamples on purpose
   syncSteps(n);
 }
