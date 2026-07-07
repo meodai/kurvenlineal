@@ -458,13 +458,7 @@ function renderBars(): void {
   });
   const monotone = fitted.every((v, i) => i === 0 || v >= fitted[i - 1]);
   $("fitInfo").innerHTML =
-    `data n=<b>${data.length}</b> &middot; max fit error <b>${fmt(maxErr)}</b>` +
-    (steps !== data.length
-      ? ` &middot; resampled to <b>${steps}</b> steps`
-      : "") +
-    (state.offsetMode !== "off"
-      ? ` &middot; offsets <b>${state.offsetMode === "ratio" ? "&times;ratio" : "+delta"}</b>`
-      : "") +
+    `max fit error <b>${fmt(maxErr)}</b>` +
     (monotone
       ? ""
       : ` &middot; <b style="color:var(--acryl)">non-monotone</b>`);
