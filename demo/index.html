@@ -52,6 +52,11 @@
         font-size: 1rem;
       }
 
+      svg {
+        display: block;
+        overflow: visible;
+      }
+
       :focus-visible {
         outline: 2px solid var(--text);
         outline-offset: 2px;
@@ -650,12 +655,12 @@
         <a href="https://github.com/meodai/kurvenlineal">GitHub</a>
       </div>
       <p>
-        kurvenlineal is a bezier easing run in reverse. Normally you start with
+        <b>kurvenlineal</b> is a bezier easing run in reverse. Normally you start with
         a
-        <code>cubic-bezier()</code> and sample values from it — here you start
+        <code>cubic-bezier()</code> and sample values from it, in this case you start
         with the values: hand it a list of numbers and it finds the quadratic or
-        cubic easing (endpoints fixed at 0,0&thinsp;&rarr;&thinsp;1,1) that fits
-        them best, by least squares.
+        cubic easing (endpoints fixed at 0,0&thinsp;&rarr;&thinsp;1,1) that
+        stays as close as possible to all of them (a least-squares fit).
       </p>
       <p>
         The fit also records each value's deviation from the curve, so a
