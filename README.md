@@ -13,7 +13,6 @@ import { fitScale } from "kurvenlineal";
 const fit = fitScale([4, 5, 7, 10, 14.5, 20, 28, 40, 57, 96], 2);
 
 fit.curve;         // [0.882, 0.071]           one control point (degree 2)
-fit.css;           // "cubic-bezier(0.588, 0.048, 0.922, 0.381)"  (exact elevation)
 fit.maxError;      // 0.46                      worst deviation, input units
 fit.sizes(6);      // [4, 7, 12, 23, 42, 96]    resample onto the curve
 fit.at(0.5);       // curve value at the midpoint, input units
@@ -40,8 +39,8 @@ At `n === data.length`, `"delta"` reproduces the input exactly.
 
 `fitQuad(xs, ys)` / `fitCubic(xs, ys)` fit normalized points (both axes 0..1,
 endpoints included). `ease(x, curve)` evaluates either degree. `elevate(quad)`
-is the exact degree elevation `(⅔Q, ⅓ + ⅔Q)`; `toCSS(curve)` always emits a
-valid `cubic-bezier()`.
+is the exact degree elevation `(⅔Q, ⅓ + ⅔Q)` — handy when you need a cubic
+form of a quad fit, e.g. for a CSS `cubic-bezier()`.
 
 The bezier primitives underneath are exported too, endpoints always fixed at
 0 and 1:

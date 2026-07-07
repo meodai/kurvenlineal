@@ -69,12 +69,6 @@ export const elevate = ([px, py]: Quad): Cubic => [
   (1 + 2 * py) / 3,
 ];
 
-/** css timing function — quads are elevated so the string is always valid css */
-export const toCSS = (curve: Curve): string => {
-  const c = curve.length === 2 ? elevate(curve) : curve;
-  return `cubic-bezier(${c.map((v) => Math.round(v * 1000) / 1000).join(", ")})`;
-};
-
 /**
  * fit a quadratic easing to normalized points.
  * x(t) is quadratic, so t(x, px) is closed form and — for fixed px — the
@@ -196,8 +190,6 @@ export interface ScaleFit<C extends Curve = Curve> {
   at: (x: number) => number;
   /** resample the scale to n steps; offsets carry the frozen residuals along */
   sizes: (n: number, offsets?: OffsetMode) => number[];
-  /** css timing function (quads elevated to cubic) */
-  css: string;
 }
 
 export function fitScale(values: readonly number[], degree: 2): ScaleFit<Quad>;
@@ -250,5 +242,5 @@ export function fitScale(values: readonly number[], degree: Degree = 3): ScaleFi
     });
   };
 
-  return { curve, min, max, data, residuals, maxError, ease: easeAt, at, sizes, css: toCSS(curve) };
+  return { curve, min, max, data, residuals, maxError, ease: easeAt, at, sizes };
 }

@@ -6,7 +6,6 @@ import {
   fitCubic,
   ease,
   elevate,
-  toCSS,
   bernstein2,
   bernstein3,
   solveT2,
@@ -127,15 +126,6 @@ test("offset carry: ratio at n = data.length reproduces the input", () => {
   const data = [4, 5.5, 8, 12.5, 18, 27, 41, 63, 96];
   const s = fitScale(data, 2).sizes(data.length, "ratio");
   s.forEach((v, i) => assert.ok(Math.abs(v - data[i]) < 1e-6, `i=${i} ${v}`));
-});
-
-test("css string is always a valid cubic-bezier, quads elevated", () => {
-  const f2 = fitScale([4, 8, 16, 32, 64, 96], 2);
-  const f3 = fitScale([4, 8, 16, 32, 64, 96], 3);
-  for (const f of [f2, f3]) {
-    assert.match(f.css, /^cubic-bezier\((-?\d+(\.\d+)?, ){3}-?\d+(\.\d+)?\)$/);
-  }
-  assert.equal(f2.css, toCSS(f2.curve));
 });
 
 test("input validation", () => {

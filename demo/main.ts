@@ -3,7 +3,6 @@ import {
   fitCubic,
   fitScale,
   ease,
-  toCSS,
   type Curve,
 } from "../src/index.ts";
 
@@ -458,7 +457,7 @@ function renderBars(): void {
 
 const fit = fitScale([${data.join(", ")}]${degreeArg});
 
-fit.css;      // "${toCSS(curve())}"
+fit.curve;    // [${(state.params as number[]).map(fmt).join(", ")}]
 fit.sizes(${steps}${offsetArg}); // [${fitted.map((v) => Math.round(v)).join(", ")}]`;
 }
 
