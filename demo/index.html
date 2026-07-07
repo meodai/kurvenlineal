@@ -8,6 +8,12 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/Iosevka/6.0.0/iosevka/iosevka.min.css"
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Astloch:wght@400;700&display=swap"
+    />
     <style>
       :root {
         color-scheme: light dark;
@@ -78,9 +84,11 @@
       }
 
       .demo__title {
-        font-size: 2rem;
-        font-weight: 800;
-        letter-spacing: -0.05em;
+        font-family: "Astloch", cursive;
+        font-size: 3rem;
+        font-weight: 700;
+        letter-spacing: 0;
+        line-height: 1.1;
       }
 
       .demo__subtitle {
@@ -428,8 +436,12 @@
       }
       .about h1,
       .about h2 {
-        font-weight: 200;
-        letter-spacing: -0.03em;
+        font-family: "Astloch", cursive;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+      .about h1 {
+        font-size: 2.5rem;
       }
       .about h2 {
         margin-top: 2em;
@@ -485,7 +497,7 @@
     <div class="app">
       <main class="demo">
         <header class="demo__header">
-          <h1 class="demo__title">kurvenlineal</h1>
+          <h1 class="demo__title">KurvenLineal</h1>
           <p class="demo__subtitle">bezier curve fitting</p>
         </header>
 
@@ -660,7 +672,7 @@
 
     <article class="about">
       <div class="about__header">
-        <h1>kurvenlineal</h1>
+        <h1>KurvenLineal</h1>
         <a href="https://github.com/meodai/kurvenlineal">GitHub</a>
       </div>
       <p>
@@ -687,12 +699,19 @@
       ><button id="copy" class="button">copy</button><code id="code"></code></pre>
       <h2>Acknowledgments</h2>
       <p>
-        The library is dependency-free. The typeface is the open-source
+        The library is dependency-free. The typefaces are the open-source
         <a
           href="https://be5invis.github.io/Iosevka/"
           target="_blank"
           rel="noopener noreferrer"
           >Iosevka</a
+        >
+        and
+        <a
+          href="https://fonts.google.com/specimen/Astloch"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Astloch</a
         >.
       </p>
       <p>
