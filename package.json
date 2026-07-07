@@ -1,6 +1,6 @@
 {
   "name": "kurvenlineal",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "fit a bezier easing (quadratic or cubic) to an existing size scale — the curve owns the scale",
   "type": "module",
   "main": "dist/index.js",
