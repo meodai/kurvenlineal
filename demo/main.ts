@@ -450,12 +450,7 @@ function renderBars(): void {
     const fit = min + ease(x, curve()) * (max - min);
     maxErr = Math.max(maxErr, Math.abs(fit - data[i]));
   });
-  const monotone = fitted.every((v, i) => i === 0 || v >= fitted[i - 1]);
-  $("fitInfo").innerHTML =
-    `max fit error <b>${fmt(maxErr)}</b>` +
-    (monotone
-      ? ""
-      : ` &middot; <b style="color:var(--acryl)">non-monotone</b>`);
+  $("fitInfo").innerHTML = `max fit error <b>${fmt(maxErr)}</b>`;
 
   const degreeArg = state.degree === 2 ? ", 2" : "";
   const offsetArg = state.offsetMode === "off" ? "" : `, "${state.offsetMode}"`;
