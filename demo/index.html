@@ -177,8 +177,21 @@
 
       .control--minmax {
         flex-direction: row;
+        align-items: flex-end;
+        flex: 1 1 auto;
         .control + .control {
           margin-left: -2px;
+        }
+        /* one continuous top line: input borders and the ruler line align */
+        .control__input,
+        .ruler {
+          height: 2.25rem;
+        }
+        #min {
+          text-align: right;
+        }
+        .control:has(#min) .control__label {
+          justify-content: flex-end;
         }
       }
 
@@ -187,6 +200,9 @@
         flex: 1 1 10rem;
         min-width: 10rem;
         max-width: 18rem;
+      }
+      .control--steps .control__label {
+        padding-inline: 1rem;
       }
 
       .ruler {
@@ -321,8 +337,10 @@
       }
 
       .panel h2 {
+        font-family: inherit;
         font-size: 0.8rem;
         font-weight: 300;
+        letter-spacing: 0;
         color: var(--soft);
         margin-bottom: 0.5rem;
       }
@@ -525,6 +543,16 @@
                 value="4"
               />
             </div>
+            <div class="control control--steps">
+              <label class="control__label" for="steps"
+                >steps <b id="stepsOut">12</b></label
+              >
+              <div class="ruler">
+                <input id="steps" type="range" min="3" max="24" value="12" />
+                <i></i>
+                <span class="range-marker"></span>
+              </div>
+            </div>
             <div class="control">
               <label class="control__label" for="max">max</label>
               <input
@@ -534,16 +562,6 @@
                 step="1"
                 value="96"
               />
-            </div>
-          </div>
-          <div class="control control--steps">
-            <label class="control__label" for="steps"
-              >steps <b id="stepsOut">12</b></label
-            >
-            <div class="ruler">
-              <input id="steps" type="range" min="3" max="24" value="12" />
-              <i></i>
-              <span class="range-marker"></span>
             </div>
           </div>
           <div class="control">
